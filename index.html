@@ -136,7 +136,13 @@
 
           <!-- 凡例 -->
           <div class="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs text-slate-600">
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500 inline-block border border-white shadow-sm"></span> 観測者（月の出の位置）</span>
+            <span class="flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-rose-500 inline-block" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <circle cx="12" cy="5" r="3.5" />
+                <path d="M12 10c-3 0-5 1.8-5 4v2h2.2v6h5.6v-6H17v-2c0-2.2-2-4-5-4z" />
+              </svg>
+              観測者（月の出の位置）
+            </span>
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-amber-400/70 border border-amber-500 inline-block"></span> 余分な回転（おくれ分）</span>
             <span class="flex items-center gap-1.5"><span class="w-4 border-t-2 border-dashed border-rose-400 inline-block"></span> 東の空を見る視線</span>
           </div>
@@ -582,6 +588,12 @@
     // =========================================================================
     // タブ1：毎日約50分おくれる理由（2段階アニメーション付き）
     // =========================================================================
+    // 地球の接線（東の地平線）がちょうど月の中心に接する幾何学オフセット角
+    const DELAY_EARTH_RATIO = 0.09;
+    const DELAY_ORBIT_RATIO = 0.35;
+    const BASE_OBS_OFFSET = Math.acos(DELAY_EARTH_RATIO / DELAY_ORBIT_RATIO);
+    const BASE_OBS_ANGLE = Math.PI / 2 + BASE_OBS_OFFSET;
+
     const delayState = {
       cycleDays: 4,          // 4, 12, 29.5
       currentDay: 0,         // 現在の経過日数
@@ -592,9 +604,9 @@
       startDay: 0,
       endDay: 0,
       // 描画用の現在角度（Canvas座標：下が +PI/2、反時計回りはマイナス方向）
-      obsAngle: Math.PI,     // 0日目は左（朝6:00 = PI）
-      moonAngle: Math.PI / 2,// 0日目は下（新月 = PI/2）
-      ghostMoonAngle: null,  // 昨日の月の位置
+      obsAngle: BASE_OBS_ANGLE, // 0日目は東の接線がちょうど新月に接する位置
+      moonAngle: Math.PI / 2,   // 0日目は下（新月 = PI/2）
+      ghostMoonAngle: null,     // 昨日の月の位置
       extraSectorStart: null,
       extraSectorEnd: null
     };
@@ -655,7 +667,7 @@
       delayState.animating = false;
       delayState.stage = 'idle';
       delayState.currentDay = 0;
-      delayState.obsAngle = Math.PI;
+      delayState.obsAngle = BASE_OBS_ANGLE;
       delayState.moonAngle = Math.PI / 2;
       delayState.ghostMoonAngle = null;
       delayState.extraSectorStart = null;
@@ -681,12 +693,12 @@
       delayState.currentDay = next;
 
       const stepAngle = (Math.PI * 2) / delayState.cycleDays;
-      delayState.obsAngle = Math.PI - next * stepAngle;
+      delayState.obsAngle = BASE_OBS_ANGLE - next * stepAngle;
       delayState.moonAngle = Math.PI / 2 - next * stepAngle;
 
       if (delta > 0 && next > 0) {
         delayState.ghostMoonAngle = Math.PI / 2 - prevDay * stepAngle;
-        delayState.extraSectorStart = Math.PI - prevDay * stepAngle;
+        delayState.extraSectorStart = BASE_OBS_ANGLE - prevDay * stepAngle;
         delayState.extraSectorEnd = delayState.obsAngle;
         const perDayText = getPerDayDelayText();
         setDelayBanner('done', '✨', `${next}日目に進んだよ！1日分（${perDayText}）だけ月の出がおくれたね。`);
@@ -709,7 +721,7 @@
       if (delayState.currentDay >= maxDay) {
         // 1周し終わっていたら0日目に戻してからスタート
         delayState.currentDay = 0;
-        delayState.obsAngle = Math.PI;
+        delayState.obsAngle = BASE_OBS_ANGLE;
         delayState.moonAngle = Math.PI / 2;
       }
 
@@ -866,7 +878,7 @@
       if (delayState.animating) {
         const speedMul = delayState.speedMode === 'slow' ? 1.85 : 1.0;
         const stepAngle = (Math.PI * 2) / delayState.cycleDays;
-        const baseObs = Math.PI - delayState.startDay * stepAngle;
+        const baseObs = BASE_OBS_ANGLE - delayState.startDay * stepAngle;
         const baseMoon = Math.PI / 2 - delayState.startDay * stepAngle;
         const nextMoon = baseMoon - stepAngle;
         const badge = document.getElementById('anim-clock-badge');
@@ -939,6 +951,57 @@
       requestAnimationFrame(animateDelayLoop);
     }
 
+    // 地球の表面に立つ小さな人の形を描画するヘルパー
+    function drawObserverPerson(ctx, x, y, surfaceAngle, scale, color = '#f43f5e') {
+      ctx.save();
+      ctx.translate(x, y);
+      // 足元を地球の中心側、頭を外側（空側）に向ける
+      ctx.rotate(surfaceAngle + Math.PI / 2);
+
+      const headR = scale * 0.24;
+      const bodyTop = -scale * 0.72;
+      const bodyBottom = -scale * 0.30;
+
+      // 背景に映える白いフチ取り
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      const drawStickFigure = (strokeStyle, fillStyle, lineWidth) => {
+        ctx.strokeStyle = strokeStyle;
+        ctx.fillStyle = fillStyle;
+        ctx.lineWidth = lineWidth;
+
+        // 頭
+        ctx.beginPath();
+        ctx.arc(0, bodyTop - headR * 0.85, headR, 0, Math.PI * 2);
+        ctx.fill();
+        if (lineWidth > scale * 0.16) {
+          ctx.stroke();
+        }
+
+        // 胴体・腕・脚
+        ctx.beginPath();
+        // 胴体
+        ctx.moveTo(0, bodyTop);
+        ctx.lineTo(0, bodyBottom);
+        // 両腕
+        ctx.moveTo(-scale * 0.34, bodyTop + scale * 0.16);
+        ctx.lineTo(scale * 0.34, bodyTop + scale * 0.16);
+        // 左脚・右脚（足元がちょうど y=0 の地表に接地）
+        ctx.moveTo(0, bodyBottom);
+        ctx.lineTo(-scale * 0.24, 0);
+        ctx.moveTo(0, bodyBottom);
+        ctx.lineTo(scale * 0.24, 0);
+        ctx.stroke();
+      };
+
+      // 白フチ → 指定色の人型の順に重ねてくっきり表示
+      drawStickFigure('#ffffff', '#ffffff', scale * 0.28);
+      drawStickFigure(color, color, scale * 0.15);
+
+      ctx.restore();
+    }
+
     function drawDelaySpaceCanvas() {
       const w = delayCanvas.clientWidth;
       const h = delayCanvas.clientHeight;
@@ -950,8 +1013,8 @@
 
       const cx = w / 2;
       const cy = h * 0.44;
-      const orbitR = Math.min(w, h) * 0.34;
-      const earthR = Math.min(w, h) * 0.105;
+      const orbitR = Math.min(w, h) * DELAY_ORBIT_RATIO;
+      const earthR = Math.min(w, h) * DELAY_EARTH_RATIO;
       const moonR = Math.min(w, h) * 0.042;
 
       // 1. 太陽（下部）
@@ -1023,8 +1086,9 @@
       const obsY = cy + Math.sin(delayState.obsAngle) * earthR;
 
       // 東方向は obsAngle - PI/2（反時計回りの接線方向）
+      // 接線の長さを幾何学的に算出し、追いついた瞬間に月の縁へぴったり接するようにする
       const eastDir = delayState.obsAngle - Math.PI / 2;
-      const rayLen = orbitR * 1.05;
+      const rayLen = Math.sqrt(orbitR * orbitR - earthR * earthR);
       const rayEndX = obsX + Math.cos(eastDir) * rayLen;
       const rayEndY = obsY + Math.sin(eastDir) * rayLen;
 
@@ -1038,14 +1102,9 @@
       ctx.stroke();
       ctx.restore();
 
-      // 観測者マーカー（赤いピン）
-      ctx.beginPath();
-      ctx.arc(obsX, obsY, Math.max(6, w * 0.015), 0, Math.PI * 2);
-      ctx.fillStyle = '#f43f5e';
-      ctx.fill();
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2.2;
-      ctx.stroke();
+      // 観測者マーカー（地球の表面に立つ小さな人の形）
+      const personScale = Math.max(13, w * 0.036);
+      drawObserverPerson(ctx, obsX, obsY, delayState.obsAngle, personScale);
 
       // 6. 昨日の月の位置（ゴースト表示）
       if (delayState.ghostMoonAngle !== null) {
@@ -1207,16 +1266,11 @@
       // 地球と時刻ラベル
       drawEarthAndLabels(ctx, cx, cy, earthR, w, 0);
 
-      // 南中する位置（地球上で月を正面に見る点）に小さなマーカー
+      // 南中する位置（地球上で月を正面に見る点）に小さな人の形を描画
       const southX = cx + Math.cos(mAngle) * earthR;
       const southY = cy + Math.sin(mAngle) * earthR;
-      ctx.beginPath();
-      ctx.arc(southX, southY, 5.5, 0, Math.PI * 2);
-      ctx.fillStyle = '#38bdf8';
-      ctx.fill();
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      const personScale = Math.max(13, w * 0.036);
+      drawObserverPerson(ctx, southX, southY, mAngle, personScale, '#0ea5e9');
 
       // 月（下半分が光る）
       drawSpaceMoon(ctx, mx, my, moonR, false);
