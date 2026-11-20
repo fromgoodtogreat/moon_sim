@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>月の動きと満ち欠け 学習ノート</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap');
+
+    body {
+      font-family: 'M PLUS Rounded 1c', 'Inter', 'Hiragino Maru Gothic ProN', sans-serif;
+      background-color: #f4f7fb;
+      color: #1e293b;
+      /* 学習ノート風の控えめなドット方眼背景 */
+      background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+
+    /* 宇宙図の濃紺背景 */
+    .space-canvas-wrap {
+      background: radial-gradient(circle at 50% 45%, #172554 0%, #0b1120 75%, #060913 100%);
+    }
+
+    /* カスタムレンジスライダー */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 10px;
+      border-radius: 999px;
+      background: #cbd5e1;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #f59e0b;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.3);
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #f59e0b;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.3);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-amber-200 selection:text-slate-900">
+
+  <!-- メインコンテナ -->
+  <div class="max-w-6xl mx-auto px-3 py-4 sm:px-6 sm:py-6">
+
+    <!-- ヘッダー -->
+    <header class="bg-white/95 backdrop-blur rounded-3xl shadow-sm border border-slate-200 p-4 sm:p-5 mb-4 sm:mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+          <div class="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full mb-1">
+            <span>📓</span> 親子でまなぶ理科ノート
+          </div>
+          <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+            🌙 月の動きと満ち欠け マスターアプリ
+          </h1>
+        </div>
+        <div class="text-xs sm:text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2">
+          <span class="font-bold text-slate-700">共通ルール：</span>北極の上から見た図 ／ 太陽は<span class="font-bold text-orange-600">下</span> ／ 自転も公転も<span class="font-bold text-indigo-600">反時計回り↺</span>
+        </div>
+      </div>
+
+      <!-- トップタブナビゲーション（3つの独立モード） -->
+      <nav class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-4" aria-label="学習モード切替">
+        <button id="nav-tab-1" onclick="switchMainTab(1)" class="main-tab flex items-center justify-center gap-2 p-3 rounded-2xl font-extrabold text-sm sm:text-base transition-all border-2 cursor-pointer">
+          <span>⏰</span>
+          <span>1. 毎日50分おくれる理由</span>
+        </button>
+        <button id="nav-tab-2" onclick="switchMainTab(2)" class="main-tab flex items-center justify-center gap-2 p-3 rounded-2xl font-extrabold text-sm sm:text-base transition-all border-2 cursor-pointer">
+          <span>🌓</span>
+          <span>2. 月の満ち欠けシミュレーター</span>
+        </button>
+        <button id="nav-tab-3" onclick="switchMainTab(3)" class="main-tab flex items-center justify-center gap-2 p-3 rounded-2xl font-extrabold text-sm sm:text-base transition-all border-2 cursor-pointer">
+          <span>📝</span>
+          <span>3. 応用クイズ（全6問）</span>
+        </button>
+      </nav>
+    </header>
+
+    <!-- ========================================================= -->
+    <!-- タブ1：毎日約50分おくれる理由（24時間 ÷ 公転日数）           -->
+    <!-- ========================================================= -->
+    <main id="panel-tab-1" class="tab-panel">
+
+      <!-- ステップ切り替え -->
+      <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
+        <button id="step-btn-4" onclick="setDelayCycle(4)" class="step-btn p-2.5 sm:p-3.5 rounded-2xl border-2 text-center transition-all cursor-pointer">
+          <div class="text-[11px] sm:text-xs font-bold opacity-80">ステップ 1</div>
+          <div class="text-sm sm:text-base font-extrabold mt-0.5">4日で1周</div>
+          <div class="text-[11px] sm:text-xs font-bold mt-0.5">1日 ＋6時間</div>
+        </button>
+        <button id="step-btn-12" onclick="setDelayCycle(12)" class="step-btn p-2.5 sm:p-3.5 rounded-2xl border-2 text-center transition-all cursor-pointer">
+          <div class="text-[11px] sm:text-xs font-bold opacity-80">ステップ 2</div>
+          <div class="text-sm sm:text-base font-extrabold mt-0.5">12日で1周</div>
+          <div class="text-[11px] sm:text-xs font-bold mt-0.5">1日 ＋2時間</div>
+        </button>
+        <button id="step-btn-29.5" onclick="setDelayCycle(29.5)" class="step-btn p-2.5 sm:p-3.5 rounded-2xl border-2 text-center transition-all cursor-pointer">
+          <div class="text-[11px] sm:text-xs font-bold opacity-80">ステップ 3</div>
+          <div class="text-sm sm:text-base font-extrabold mt-0.5">ほんとうの月</div>
+          <div class="text-[11px] sm:text-xs font-bold mt-0.5">29.5日（＋約49分）</div>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start">
+
+        <!-- 左側：宇宙アニメーション図 -->
+        <div class="lg:col-span-7 bg-white rounded-3xl shadow-sm border border-slate-200 p-3 sm:p-5">
+          <!-- ステータスバナー（2段階アニメの解説を表示） -->
+          <div id="delay-status-banner" class="mb-3 rounded-2xl p-3 sm:p-3.5 bg-indigo-50 border border-indigo-200 text-indigo-950 text-xs sm:text-sm font-bold leading-relaxed flex items-start gap-2.5">
+            <span id="delay-status-icon" class="text-lg shrink-0">💡</span>
+            <span id="delay-status-text">「＋1日すすめる（アニメ再生）」を押して、地球が1回転（24時間）したあとのズレを見てみよう！</span>
+          </div>
+
+          <!-- 宇宙キャンバス -->
+          <div id="delay-canvas-wrap" class="space-canvas-wrap relative w-full aspect-square max-w-[520px] mx-auto rounded-2xl overflow-hidden shadow-inner border border-slate-800">
+            <canvas id="delayCanvas" class="w-full h-full block"></canvas>
+            <!-- 右上の経過クロック表示（アニメ中に強調） -->
+            <div id="anim-clock-badge" class="hidden absolute top-3 right-3 bg-slate-900/90 border border-amber-400/70 text-amber-300 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold shadow-lg">
+              地球の回転：0時間
+            </div>
+          </div>
+
+          <!-- 凡例 -->
+          <div class="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs text-slate-600">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500 inline-block border border-white shadow-sm"></span> 観測者（月の出の位置）</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-amber-400/70 border border-amber-500 inline-block"></span> 余分な回転（おくれ分）</span>
+            <span class="flex items-center gap-1.5"><span class="w-4 border-t-2 border-dashed border-rose-400 inline-block"></span> 東の空を見る視線</span>
+          </div>
+
+          <!-- 操作コントロール -->
+          <div class="mt-4 pt-4 border-t border-slate-200 space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <button id="btn-play-day" onclick="startOneDayAnimation()" class="p-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-extrabold text-sm sm:text-base shadow-md shadow-amber-500/20 transition cursor-pointer flex items-center justify-center gap-2">
+                <span>▶</span> ＋1日すすめる（アニメ再生）
+              </button>
+              <div class="grid grid-cols-2 gap-2">
+                <button onclick="stepDelayNoAnim(1)" class="p-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-bold text-xs sm:text-sm transition cursor-pointer">
+                  ⏩ アニメなしで＋1日
+                </button>
+                <button onclick="resetDelaySim()" class="p-3 rounded-2xl bg-slate-200 hover:bg-slate-300 active:scale-[0.98] text-slate-800 font-bold text-xs sm:text-sm transition cursor-pointer">
+                  ↺ リセット
+                </button>
+              </div>
+            </div>
+
+            <!-- アニメ速度切替 & 1日もどす -->
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-50 rounded-2xl px-3.5 py-2 border border-slate-200">
+              <div class="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-700">
+                <span>アニメ速度：</span>
+                <button id="speed-normal" onclick="setAnimSpeed('normal')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer">ふつう</button>
+                <button id="speed-slow" onclick="setAnimSpeed('slow')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer">ゆっくり</button>
+              </div>
+              <button onclick="stepDelayNoAnim(-1)" class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-xs font-bold text-slate-700 transition cursor-pointer">
+                ◀ 1日もどす
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右側：ピザの切り分けイメージ＆計算式 -->
+        <div class="lg:col-span-5 flex flex-col gap-4">
+
+          <!-- 現在の数値カード -->
+          <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-4 sm:p-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
+              <div>
+                <div class="text-xs font-bold text-slate-500">いま何日目？</div>
+                <div class="text-3xl font-extrabold text-slate-900">
+                  <span id="delay-day-num">0</span><span class="text-base font-bold text-slate-500 ml-1">日目</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-xs font-bold text-slate-500">1日あたりのおくれ</div>
+                <div id="delay-per-day-badge" class="inline-block mt-1 px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-extrabold text-sm">
+                  ＋6時間
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-sky-50 border border-sky-200 rounded-2xl p-3">
+                <div class="text-xs font-bold text-sky-700">月の出のじこく</div>
+                <div id="delay-rise-time" class="text-xl sm:text-2xl font-extrabold text-sky-950 mt-1">朝 6:00</div>
+                <div class="text-[11px] text-sky-600 mt-0.5">0日目は朝6:00スタート</div>
+              </div>
+              <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3">
+                <div class="text-xs font-bold text-amber-700">累計おくれ時間</div>
+                <div id="delay-total-time" class="text-xl sm:text-2xl font-extrabold text-amber-950 mt-1">0時間</div>
+                <div id="delay-slice-label" class="text-[11px] text-amber-700 mt-0.5">ピザ 0切れ分</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ピザの切り分けイメージ（円グラフ） -->
+          <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-4 sm:p-5">
+            <div class="flex items-center justify-between mb-2">
+              <h2 class="text-sm sm:text-base font-extrabold text-slate-800">🍕 ピザの切り分けイメージ</h2>
+              <span class="text-xs font-bold text-slate-500">1周 ＝ 24時間</span>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-32 h-32 sm:w-36 sm:h-36 shrink-0">
+                <canvas id="pizzaCanvas" class="w-full h-full block"></canvas>
+              </div>
+              <div class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                <p id="pizza-desc">
+                  月が1周して元にもどると、月の出の時刻もちょうど1周（<strong>24時間</strong>）おくれます。
+                </p>
+                <p id="pizza-sub" class="mt-2 font-bold text-indigo-700">
+                  24時間のピザを4等分するから、1切れ（1日分）は「6時間」だね！
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 計算式カード -->
+          <div class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-3xl shadow-md p-4 sm:p-5">
+            <div class="text-xs font-bold text-amber-300 mb-2">📐 なぜわり算するの？計算式で確認！</div>
+            <div class="bg-white/10 rounded-2xl p-3.5 text-center border border-white/15">
+              <div id="formula-main" class="text-lg sm:text-xl font-extrabold tracking-wide text-white">
+                24時間 ÷ 4日 ＝ <span class="text-amber-300">6時間</span>
+              </div>
+              <div id="formula-sub" class="text-xs text-indigo-200 mt-1.5">
+                （1周のおくれ 24時間） ÷ （1周の日数 4日） ＝ 1日のおくれ
+              </div>
+            </div>
+            <p id="formula-note" class="text-xs text-slate-300 mt-3 leading-relaxed">
+              まずは4日・12日で「1周24時間を日数でわる」感覚をつかんでから、ステップ3の「29.5日」を見てみよう！
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- タブ2：月の満ち欠けシミュレーター（独立した画面）            -->
+    <!-- ========================================================= -->
+    <main id="panel-tab-2" class="tab-panel hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start">
+
+        <!-- 左側：宇宙図＋操作スライダー・プリセット -->
+        <div class="lg:col-span-7 bg-white rounded-3xl shadow-sm border border-slate-200 p-3 sm:p-5">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-sm sm:text-base font-extrabold text-slate-800">🌌 宇宙から見た太陽・地球・月</h2>
+            <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">スライダーで月を動かそう</span>
+          </div>
+
+          <div id="phase-space-wrap" class="space-canvas-wrap relative w-full aspect-square max-w-[500px] mx-auto rounded-2xl overflow-hidden shadow-inner border border-slate-800">
+            <canvas id="phaseSpaceCanvas" class="w-full h-full block"></canvas>
+          </div>
+
+          <!-- スライダー -->
+          <div class="mt-4 bg-slate-50 rounded-2xl p-3.5 border border-slate-200">
+            <div class="flex items-center justify-between text-xs sm:text-sm font-bold text-slate-700 mb-2">
+              <span>月齢（新月からの日数）</span>
+              <span class="text-indigo-700 font-extrabold text-base"><span id="slider-age-val">0.0</span> 日目</span>
+            </div>
+            <input id="phase-slider" type="range" min="0" max="29.5" step="0.1" value="0" class="w-full" oninput="onPhaseSliderChange(this.value)" />
+            <div class="flex justify-between text-[11px] text-slate-400 font-bold mt-1">
+              <span>0日 (新月)</span>
+              <span>7.4日 (上弦)</span>
+              <span>14.8日 (満月)</span>
+              <span>22.1日 (下弦)</span>
+              <span>29.5日</span>
+            </div>
+          </div>
+
+          <!-- ワンクリックプリセットボタン -->
+          <div class="mt-3">
+            <div class="text-xs font-bold text-slate-500 mb-2">ワンクリックで代表的な形へ：</div>
+            <div class="grid grid-cols-3 sm:grid-cols-5 gap-2">
+              <button onclick="setMoonAge(0)" class="preset-btn p-2.5 rounded-xl bg-slate-100 hover:bg-indigo-100 border border-slate-200 text-xs sm:text-sm font-bold text-slate-800 transition cursor-pointer">🌑 新月</button>
+              <button onclick="setMoonAge(3.0)" class="preset-btn p-2.5 rounded-xl bg-slate-100 hover:bg-indigo-100 border border-slate-200 text-xs sm:text-sm font-bold text-slate-800 transition cursor-pointer">🌒 三日月</button>
+              <button onclick="setMoonAge(7.4)" class="preset-btn p-2.5 rounded-xl bg-slate-100 hover:bg-indigo-100 border border-slate-200 text-xs sm:text-sm font-bold text-slate-800 transition cursor-pointer">🌓 上弦の月</button>
+              <button onclick="setMoonAge(14.8)" class="preset-btn p-2.5 rounded-xl bg-slate-100 hover:bg-indigo-100 border border-slate-200 text-xs sm:text-sm font-bold text-slate-800 transition cursor-pointer">🌕 満月</button>
+              <button onclick="setMoonAge(22.1)" class="preset-btn p-2.5 rounded-xl bg-slate-100 hover:bg-indigo-100 border border-slate-200 text-xs sm:text-sm font-bold text-slate-800 transition cursor-pointer">🌗 下弦の月</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右側：地球から見た月の形＆時間帯ガイド -->
+        <div class="lg:col-span-5 flex flex-col gap-4">
+
+          <!-- 地球から見た月の形 -->
+          <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-4 sm:p-5 text-center">
+            <div class="text-xs font-bold text-slate-500 mb-2">🔭 地球（日本・北半球）から見た月の形</div>
+            <div class="space-canvas-wrap w-48 h-48 sm:w-56 sm:h-56 mx-auto rounded-full p-3 flex items-center justify-center shadow-lg border-4 border-slate-200">
+              <canvas id="earthViewMoonCanvas" class="w-full h-full block"></canvas>
+            </div>
+            <div class="mt-4">
+              <h3 id="phase-title" class="text-2xl sm:text-3xl font-extrabold text-slate-900">新月</h3>
+              <p id="phase-age-subtitle" class="text-sm font-bold text-indigo-600 mt-1">月齢 約 0.0 日目</p>
+            </div>
+          </div>
+
+          <!-- 見える時間帯カード -->
+          <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-4 sm:p-5">
+            <h3 class="text-sm sm:text-base font-extrabold text-slate-800 mb-3">🕒 おおよその見える時刻</h3>
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="bg-amber-50 border border-amber-200 rounded-2xl p-2.5">
+                <div class="text-[11px] font-bold text-amber-700">月の出（東）</div>
+                <div id="phase-rise-time" class="text-sm sm:text-base font-extrabold text-amber-950 mt-1">朝 6:00</div>
+              </div>
+              <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-2.5">
+                <div class="text-[11px] font-bold text-indigo-700">南中（南）</div>
+                <div id="phase-south-time" class="text-sm sm:text-base font-extrabold text-indigo-950 mt-1">昼 12:00</div>
+              </div>
+              <div class="bg-slate-100 border border-slate-200 rounded-2xl p-2.5">
+                <div class="text-[11px] font-bold text-slate-600">月の入り（西）</div>
+                <div id="phase-set-time" class="text-sm sm:text-base font-extrabold text-slate-900 mt-1">夕方 18:00</div>
+              </div>
+            </div>
+
+            <!-- わかりやすい一言ガイド -->
+            <div class="mt-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 text-xs sm:text-sm text-emerald-950 leading-relaxed">
+              <div class="font-extrabold text-emerald-800 mb-1">🌟 いつ・どこでよく見える？</div>
+              <p id="phase-guide-text">太陽と同じ方向にあるため、太陽の光にまぎれて地球からは見えません。</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- タブ3：応用クイズ（全6問・解答と詳しい解説つき）             -->
+    <!-- ========================================================= -->
+    <main id="panel-tab-3" class="tab-panel hidden">
+      <div class="max-w-3xl mx-auto">
+
+        <!-- クイズ出題カード -->
+        <div id="quiz-active-view" class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 sm:p-7">
+          <!-- 進捗バー -->
+          <div class="flex items-center justify-between text-xs sm:text-sm font-bold text-slate-500 mb-2">
+            <span id="quiz-progress-label" class="text-indigo-700 font-extrabold">第 1 問 / 全 6 問</span>
+            <span id="quiz-score-live">いまの正解数：0 問</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden mb-5">
+            <div id="quiz-progress-bar" class="h-full bg-indigo-500 rounded-full transition-all duration-300" style="width: 16.6%"></div>
+          </div>
+
+          <!-- 問題文 -->
+          <div class="mb-5">
+            <span id="quiz-category-tag" class="inline-block text-xs font-bold bg-amber-100 text-amber-800 px-3 py-1 rounded-full mb-2">計算の応用</span>
+            <h2 id="quiz-question-text" class="text-lg sm:text-xl font-extrabold text-slate-900 leading-relaxed">
+              問題文がここに入ります
+            </h2>
+          </div>
+
+          <!-- 4択選択肢 -->
+          <div id="quiz-options" class="grid grid-cols-1 gap-3">
+            <!-- JSで生成 -->
+          </div>
+
+          <!-- 正誤＆解説エリア（回答後に表示） -->
+          <div id="quiz-feedback" class="hidden mt-5 rounded-2xl p-4 sm:p-5 border-2">
+            <div id="quiz-feedback-header" class="text-base sm:text-lg font-extrabold flex items-center gap-2 mb-2"></div>
+            <div id="quiz-feedback-exp" class="text-sm text-slate-700 leading-relaxed space-y-1.5"></div>
+            <div class="mt-4 text-right">
+              <button id="quiz-next-btn" onclick="nextQuizQuestion()" class="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-extrabold text-sm sm:text-base shadow-md transition cursor-pointer">
+                次の問題へ ▶
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- クイズ結果一覧カード -->
+        <div id="quiz-result-view" class="hidden bg-white rounded-3xl shadow-sm border border-slate-200 p-5 sm:p-7">
+          <div class="text-center border-b border-slate-200 pb-5 mb-5">
+            <div class="text-4xl mb-2" id="result-emoji">🎉</div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">クイズ結果発表！</h2>
+            <div class="mt-2 text-3xl sm:text-4xl font-extrabold text-indigo-600">
+              <span id="result-score">0</span> <span class="text-lg text-slate-500">/ 6 問 正解</span>
+            </div>
+            <p id="result-message" class="text-sm sm:text-base text-slate-600 mt-2 font-bold"></p>
+            <button onclick="restartQuiz()" class="mt-4 px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-extrabold text-sm sm:text-base shadow-md transition cursor-pointer">
+              ↺ もう一度挑戦する
+            </button>
+          </div>
+
+          <h3 class="text-base font-extrabold text-slate-800 mb-3">📋 全6問のふりかえり</h3>
+          <div id="result-review-list" class="space-y-3">
+            <!-- JSで生成 -->
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <script>
+    // =========================================================================
+    // 共通ユーティリティ・アプリ全体状態
+    // =========================================================================
+    let activeTab = 1;
+
+    // ランダムな背景の星座標を事前生成（描画のチラつき防止）
+    const STARS = Array.from({ length: 48 }, (_, i) => ({
+      x: ((i * 73 + 19) % 100) / 100,
+      y: ((i * 41 + 11) % 100) / 100,
+      r: (i % 3 === 0) ? 1.6 : 1.0,
+      alpha: 0.35 + ((i * 17) % 50) / 100
+    }));
+
+    function drawStars(ctx, w, h) {
+      ctx.save();
+      STARS.forEach(s => {
+        ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+        ctx.beginPath();
+        ctx.arc(s.x * w, s.y * h, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    // 太陽（画面下部）と地球（中央）を共通ルールで描画するヘルパー
+    function drawSunAtBottom(ctx, cx, w, h) {
+      const sunY = h * 0.96;
+      const sunR = Math.min(w, h) * 0.12;
+      const grad = ctx.createRadialGradient(cx, sunY, sunR * 0.15, cx, sunY, sunR * 1.7);
+      grad.addColorStop(0, '#fef08a');
+      grad.addColorStop(0.45, '#f97316');
+      grad.addColorStop(1, 'rgba(249, 115, 22, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, sunY, sunR * 1.7, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#fb923c';
+      ctx.beginPath();
+      ctx.arc(cx, sunY, sunR * 0.68, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `800 ${Math.max(12, w * 0.032)}px "M PLUS Rounded 1c", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('☀ たいよう（光は下から）', cx, h - 6);
+    }
+
+    // 地球（下半分が昼・上半分が夜）＋時刻ラベルを描画
+    function drawEarthAndLabels(ctx, cx, cy, earthR, w, rotationAngle = 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, earthR, 0, Math.PI * 2);
+      ctx.clip();
+
+      // 昼側（下半分・太陽側）
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(cx - earthR, cy, earthR * 2, earthR);
+
+      // 夜側（上半分・影側）
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(cx - earthR, cy - earthR, earthR * 2, earthR);
+
+      // 地球の自転が視覚的にわかる十字の経線（薄く回転させる）
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < 4; i++) {
+        const a = rotationAngle + (i * Math.PI) / 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(a) * earthR, cy + Math.sin(a) * earthR);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // 地球の輪郭
+      ctx.beginPath();
+      ctx.arc(cx, cy, earthR, 0, Math.PI * 2);
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 北極点
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fill();
+
+      // 時刻ラベル（固定：下=昼12:00、右=夕方18:00、上=真夜中0:00、左=朝6:00）
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = `700 ${Math.max(10, w * 0.025)}px "M PLUS Rounded 1c", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const off = earthR + Math.max(16, w * 0.042);
+      ctx.fillText('朝 6:00', cx - off - 8, cy);
+      ctx.fillText('昼 12:00', cx, cy + off);
+      ctx.fillText('夕方 18:00', cx + off + 14, cy);
+      ctx.fillText('真夜中 0:00', cx, cy - off);
+    }
+
+    // 月（常に下半分が光り、上半分が影）を描画
+    function drawSpaceMoon(ctx, x, y, r, isGhost = false) {
+      if (isGhost) {
+        ctx.save();
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(253, 224, 71, 0.55)';
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+        ctx.restore();
+        return;
+      }
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.clip();
+
+      // 上半分（影）
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(x - r, y - r, r * 2, r);
+      // 下半分（太陽側・明るい）
+      ctx.fillStyle = '#fde047';
+      ctx.fillRect(x - r, y, r * 2, r);
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // 時刻フォーマット（0:00〜23:59 の分数から日本語時刻へ）
+    function formatClockTime(totalMinutes) {
+      const norm = ((Math.round(totalMinutes) % 1440) + 1440) % 1440;
+      const h = Math.floor(norm / 60);
+      const m = norm % 60;
+      let prefix = '';
+      if (h >= 5 && h < 11) prefix = '朝';
+      else if (h >= 11 && h < 16) prefix = '昼';
+      else if (h >= 16 && h < 19) prefix = '夕方';
+      else if (h >= 19 && h <= 23) prefix = '夜';
+      else prefix = '真夜中';
+      return `${prefix} ${h}:${String(m).padStart(2, '0')}`;
+    }
+
+    // メインタブ切替
+    function switchMainTab(tabNum) {
+      activeTab = tabNum;
+      [1, 2, 3].forEach(n => {
+        const panel = document.getElementById(`panel-tab-${n}`);
+        const btn = document.getElementById(`nav-tab-${n}`);
+        if (n === tabNum) {
+          panel.classList.remove('hidden');
+          btn.className = 'main-tab flex items-center justify-center gap-2 p-3 rounded-2xl font-extrabold text-sm sm:text-base transition-all border-2 cursor-pointer bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20';
+        } else {
+          panel.classList.add('hidden');
+          btn.className = 'main-tab flex items-center justify-center gap-2 p-3 rounded-2xl font-extrabold text-sm sm:text-base transition-all border-2 cursor-pointer bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100';
+        }
+      });
+
+      // 表示切替後にキャンバスサイズを再計算して描画
+      requestAnimationFrame(() => {
+        resizeAllCanvases();
+        drawPizzaChart();
+        if (tabNum === 2) {
+          drawPhaseSpace();
+          drawEarthViewMoon();
+        }
+      });
+    }
+
+    // =========================================================================
+    // タブ1：毎日約50分おくれる理由（2段階アニメーション付き）
+    // =========================================================================
+    const delayState = {
+      cycleDays: 4,          // 4, 12, 29.5
+      currentDay: 0,         // 現在の経過日数
+      speedMode: 'normal',   // 'normal' | 'slow'
+      animating: false,
+      stage: 'idle',         // 'idle' | 'rotate24h' | 'pause24h' | 'extraRotate' | 'done'
+      stageStartTime: 0,
+      startDay: 0,
+      endDay: 0,
+      // 描画用の現在角度（Canvas座標：下が +PI/2、反時計回りはマイナス方向）
+      obsAngle: Math.PI,     // 0日目は左（朝6:00 = PI）
+      moonAngle: Math.PI / 2,// 0日目は下（新月 = PI/2）
+      ghostMoonAngle: null,  // 昨日の月の位置
+      extraSectorStart: null,
+      extraSectorEnd: null
+    };
+
+    const delayCanvas = document.getElementById('delayCanvas');
+    const delayCtx = delayCanvas.getContext('2d');
+    const pizzaCanvas = document.getElementById('pizzaCanvas');
+    const pizzaCtx = pizzaCanvas.getContext('2d');
+
+    function setDelayCycle(days) {
+      delayState.cycleDays = days;
+      resetDelaySim();
+      updateStepButtons();
+      updateDelayUI();
+      drawPizzaChart();
+    }
+
+    function updateStepButtons() {
+      [4, 12, 29.5].forEach(d => {
+        const btn = document.getElementById(`step-btn-${d}`);
+        if (d === delayState.cycleDays) {
+          btn.className = 'step-btn p-2.5 sm:p-3.5 rounded-2xl border-2 text-center transition-all cursor-pointer bg-amber-50 border-amber-500 text-amber-950 shadow-sm';
+        } else {
+          btn.className = 'step-btn p-2.5 sm:p-3.5 rounded-2xl border-2 text-center transition-all cursor-pointer bg-white border-slate-200 text-slate-600 hover:border-slate-300';
+        }
+      });
+    }
+
+    function setAnimSpeed(mode) {
+      delayState.speedMode = mode;
+      const btnN = document.getElementById('speed-normal');
+      const btnS = document.getElementById('speed-slow');
+      if (mode === 'normal') {
+        btnN.className = 'px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer bg-indigo-600 text-white';
+        btnS.className = 'px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer bg-white text-slate-600 border border-slate-300';
+      } else {
+        btnS.className = 'px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer bg-indigo-600 text-white';
+        btnN.className = 'px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer bg-white text-slate-600 border border-slate-300';
+      }
+    }
+
+    function setDelayBanner(type, icon, text) {
+      const banner = document.getElementById('delay-status-banner');
+      document.getElementById('delay-status-icon').textContent = icon;
+      document.getElementById('delay-status-text').textContent = text;
+      if (type === 'pause') {
+        banner.className = 'mb-3 rounded-2xl p-3 sm:p-3.5 bg-rose-50 border-2 border-rose-400 text-rose-950 text-xs sm:text-sm font-extrabold leading-relaxed flex items-start gap-2.5';
+      } else if (type === 'extra') {
+        banner.className = 'mb-3 rounded-2xl p-3 sm:p-3.5 bg-amber-50 border-2 border-amber-400 text-amber-950 text-xs sm:text-sm font-extrabold leading-relaxed flex items-start gap-2.5';
+      } else if (type === 'done') {
+        banner.className = 'mb-3 rounded-2xl p-3 sm:p-3.5 bg-emerald-50 border-2 border-emerald-400 text-emerald-950 text-xs sm:text-sm font-extrabold leading-relaxed flex items-start gap-2.5';
+      } else {
+        banner.className = 'mb-3 rounded-2xl p-3 sm:p-3.5 bg-indigo-50 border border-indigo-200 text-indigo-950 text-xs sm:text-sm font-bold leading-relaxed flex items-start gap-2.5';
+      }
+    }
+
+    function resetDelaySim() {
+      delayState.animating = false;
+      delayState.stage = 'idle';
+      delayState.currentDay = 0;
+      delayState.obsAngle = Math.PI;
+      delayState.moonAngle = Math.PI / 2;
+      delayState.ghostMoonAngle = null;
+      delayState.extraSectorStart = null;
+      delayState.extraSectorEnd = null;
+      document.getElementById('anim-clock-badge').classList.add('hidden');
+      setDelayBanner('info', '💡', '「＋1日すすめる（アニメ再生）」を押して、地球が1回転（24時間）したあとのズレを見てみよう！');
+      updateDelayUI();
+      drawPizzaChart();
+    }
+
+    // アニメーションなしで1日すすめる・もどす
+    function stepDelayNoAnim(delta) {
+      delayState.animating = false;
+      delayState.stage = 'idle';
+      document.getElementById('anim-clock-badge').classList.add('hidden');
+
+      const maxDay = Math.ceil(delayState.cycleDays);
+      let next = delayState.currentDay + delta;
+      if (next < 0) next = 0;
+      if (next > maxDay) next = 0;
+
+      const prevDay = delayState.currentDay;
+      delayState.currentDay = next;
+
+      const stepAngle = (Math.PI * 2) / delayState.cycleDays;
+      delayState.obsAngle = Math.PI - next * stepAngle;
+      delayState.moonAngle = Math.PI / 2 - next * stepAngle;
+
+      if (delta > 0 && next > 0) {
+        delayState.ghostMoonAngle = Math.PI / 2 - prevDay * stepAngle;
+        delayState.extraSectorStart = Math.PI - prevDay * stepAngle;
+        delayState.extraSectorEnd = delayState.obsAngle;
+        const perDayText = getPerDayDelayText();
+        setDelayBanner('done', '✨', `${next}日目に進んだよ！1日分（${perDayText}）だけ月の出がおくれたね。`);
+      } else {
+        delayState.ghostMoonAngle = null;
+        delayState.extraSectorStart = null;
+        delayState.extraSectorEnd = null;
+        setDelayBanner('info', '💡', '「＋1日すすめる（アニメ再生）」を押すと、地球が1回転する様子が見られるよ！');
+      }
+
+      updateDelayUI();
+      drawPizzaChart();
+    }
+
+    // 2段階アニメーションを開始
+    function startOneDayAnimation() {
+      if (delayState.animating) return;
+
+      const maxDay = Math.ceil(delayState.cycleDays);
+      if (delayState.currentDay >= maxDay) {
+        // 1周し終わっていたら0日目に戻してからスタート
+        delayState.currentDay = 0;
+        delayState.obsAngle = Math.PI;
+        delayState.moonAngle = Math.PI / 2;
+      }
+
+      delayState.animating = true;
+      delayState.stage = 'rotate24h';
+      delayState.stageStartTime = performance.now();
+      delayState.startDay = delayState.currentDay;
+      delayState.endDay = delayState.currentDay + 1;
+
+      const stepAngle = (Math.PI * 2) / delayState.cycleDays;
+      delayState.ghostMoonAngle = Math.PI / 2 - delayState.startDay * stepAngle;
+      delayState.extraSectorStart = null;
+      delayState.extraSectorEnd = null;
+
+      const badge = document.getElementById('anim-clock-badge');
+      badge.classList.remove('hidden');
+      badge.textContent = '地球の回転：0時間 / 24時間';
+
+      setDelayBanner('info', '🌍', '① 地球が反時計回りに1回転（24時間）しているよ！その間に月も少し公転して進むよ。');
+    }
+
+    function getPerDayDelayText() {
+      if (delayState.cycleDays === 4) return '＋6時間';
+      if (delayState.cycleDays === 12) return '＋2時間';
+      return '＋約49分';
+    }
+
+    function getPerDayAngleText() {
+      if (delayState.cycleDays === 4) return '90°';
+      if (delayState.cycleDays === 12) return '30°';
+      return '約12.2°';
+    }
+
+    function updateDelayUI() {
+      const N = delayState.cycleDays;
+      const d = delayState.currentDay;
+      const delayPerDayMin = 1440 / N;
+      const totalDelayMin = Math.min(d * delayPerDayMin, 1440);
+
+      document.getElementById('delay-day-num').textContent = d;
+      document.getElementById('delay-per-day-badge').textContent = getPerDayDelayText();
+      document.getElementById('delay-rise-time').textContent = formatClockTime(6 * 60 + totalDelayMin);
+
+      // 累計おくれ時間フォーマット
+      const rounded = Math.round(totalDelayMin);
+      let totalStr = '0時間';
+      if (rounded > 0) {
+        const h = Math.floor(rounded / 60);
+        const m = rounded % 60;
+        if (m === 0) totalStr = `${h}時間`;
+        else if (h === 0) totalStr = `約${m}分`;
+        else totalStr = `${h}時間${m}分`;
+      }
+      document.getElementById('delay-total-time').textContent = totalStr;
+      document.getElementById('delay-slice-label').textContent =
+        d >= Math.ceil(N) ? 'ちょうど1周（24時間分）！' : `ピザ ${d}切れ分`;
+
+      // ピザと計算式のテキスト
+      const pizzaSub = document.getElementById('pizza-sub');
+      const fMain = document.getElementById('formula-main');
+      const fSub = document.getElementById('formula-sub');
+      const fNote = document.getElementById('formula-note');
+
+      if (N === 4) {
+        pizzaSub.textContent = '24時間のピザを4等分するから、1切れ（1日分）は「6時間」だね！';
+        fMain.innerHTML = '24時間 ÷ 4日 ＝ <span class="text-amber-300">6時間</span>';
+        fSub.textContent = '（1周のおくれ 24時間） ÷ （公転日数 4日） ＝ 毎日 6時間おくれ';
+        fNote.textContent = '4日で1周なら、1日ごとに90°（6時間分）ずつズレて、4日後にちょうど24時間おくれて元にもどるよ！';
+      } else if (N === 12) {
+        pizzaSub.textContent = '24時間のピザを12等分するから、1切れ（1日分）は「2時間」だね！';
+        fMain.innerHTML = '24時間 ÷ 12日 ＝ <span class="text-amber-300">2時間</span>';
+        fSub.textContent = '（1周のおくれ 24時間） ÷ （公転日数 12日） ＝ 毎日 2時間おくれ';
+        fNote.textContent = '12日で1周なら、1日ごとに30°（2時間分）ずつズレるよ。わり算の意味がつかめてきたかな？';
+      } else {
+        pizzaSub.textContent = '24時間（1440分）のピザを29.5等分するから、1切れは「約49分（約50分）」になるんだ！';
+        fMain.innerHTML = '1440分 ÷ 29.5日 ≒ <span class="text-amber-300">約49分</span>';
+        fSub.textContent = '（24時間 ＝ 1440分） ÷ （ほんとうの公転日数 29.5日） ≒ 約49分';
+        fNote.textContent = '4日や12日のときとまったく同じわり算！1周24時間（1440分）を29.5日でわるから、毎日約50分おくれるんだね。';
+      }
+    }
+
+    // ピザ（円グラフ）描画
+    function drawPizzaChart() {
+      const w = pizzaCanvas.clientWidth;
+      const h = pizzaCanvas.clientHeight;
+      if (!w || !h) return;
+
+      const ctx = pizzaCtx;
+      ctx.clearRect(0, 0, w, h);
+
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.min(w, h) * 0.44;
+      const N = delayState.cycleDays;
+      const d = delayState.currentDay;
+      const ratio = Math.min(d / N, 1);
+
+      // ベースの円（まだたまっていない分）
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = '#f1f5f9';
+      ctx.fill();
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // たまった分（上から時計回りに塗る＝時計イメージで見やすく）
+      const startA = -Math.PI / 2;
+      if (ratio > 0) {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, startA, startA + ratio * Math.PI * 2, false);
+        ctx.closePath();
+        ctx.fillStyle = '#fbbf24';
+        ctx.fill();
+      }
+
+      // 等分線（ピザの切れ目）
+      const sliceCount = Math.ceil(N);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = N === 29.5 ? 1 : 2;
+      for (let i = 0; i < sliceCount; i++) {
+        const a = startA + (i / N) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+        ctx.stroke();
+      }
+
+      // 外枠
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // 中央ラベル
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 0.38, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.fillStyle = '#1e293b';
+      ctx.font = '800 11px "M PLUS Rounded 1c", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('24時間', cx, cy - 5);
+      ctx.fillStyle = '#d97706';
+      ctx.font = '700 10px "M PLUS Rounded 1c", sans-serif';
+      ctx.fillText(`÷ ${N}日`, cx, cy + 8);
+    }
+
+    // タブ1のアニメーション更新＆メインキャンバス描画ループ
+    function animateDelayLoop(now) {
+      if (delayState.animating) {
+        const speedMul = delayState.speedMode === 'slow' ? 1.85 : 1.0;
+        const stepAngle = (Math.PI * 2) / delayState.cycleDays;
+        const baseObs = Math.PI - delayState.startDay * stepAngle;
+        const baseMoon = Math.PI / 2 - delayState.startDay * stepAngle;
+        const nextMoon = baseMoon - stepAngle;
+        const badge = document.getElementById('anim-clock-badge');
+
+        if (delayState.stage === 'rotate24h') {
+          const dur = 2000 * speedMul;
+          const t = Math.min((now - delayState.stageStartTime) / dur, 1);
+          // 少し滑らかに（easeInOutSine）
+          const ease = 0.5 - Math.cos(t * Math.PI) / 2;
+
+          // 地球が反時計回りに360°回転し、同時に月も1日分公転
+          delayState.obsAngle = baseObs - ease * Math.PI * 2;
+          delayState.moonAngle = baseMoon - ease * stepAngle;
+
+          const hours = Math.round(ease * 24);
+          badge.textContent = `地球の回転：${hours}時間 / 24時間`;
+
+          if (t >= 1) {
+            delayState.stage = 'pause24h';
+            delayState.stageStartTime = now;
+            delayState.obsAngle = baseObs; // ちょうど24時間後（元の向き）
+            delayState.moonAngle = nextMoon;
+            badge.textContent = '24時間経過！（でも月が先へ…）';
+            setDelayBanner('pause', '✋', '② 地球が1回転（24時間）したよ！でも月はもう先へ進んでいるね。');
+          }
+        } else if (delayState.stage === 'pause24h') {
+          const dur = 1600 * speedMul;
+          if (now - delayState.stageStartTime >= dur) {
+            delayState.stage = 'extraRotate';
+            delayState.stageStartTime = now;
+            delayState.extraSectorStart = baseObs;
+            delayState.extraSectorEnd = baseObs;
+            setDelayBanner('extra', '⚡', `③ 月に追いつくため、地球がさらに「${getPerDayAngleText()}（${getPerDayDelayText()}）」余分に回転するよ！`);
+          }
+        } else if (delayState.stage === 'extraRotate') {
+          const dur = 1300 * speedMul;
+          const u = Math.min((now - delayState.stageStartTime) / dur, 1);
+          const ease = 1 - Math.pow(1 - u, 3); // easeOutCubic
+
+          delayState.obsAngle = baseObs - ease * stepAngle;
+          delayState.extraSectorStart = baseObs;
+          delayState.extraSectorEnd = delayState.obsAngle;
+
+          const extraMin = Math.round(ease * (1440 / delayState.cycleDays));
+          const eh = Math.floor(extraMin / 60);
+          const em = extraMin % 60;
+          const extraStr = eh > 0 ? (em > 0 ? `${eh}時間${em}分` : `${eh}時間`) : `${em}分`;
+          badge.textContent = `24時間 ＋ ${extraStr}`;
+
+          if (u >= 1) {
+            delayState.animating = false;
+            delayState.stage = 'done';
+            delayState.currentDay = delayState.endDay;
+            delayState.obsAngle = baseObs - stepAngle;
+            delayState.moonAngle = nextMoon;
+            delayState.extraSectorStart = baseObs;
+            delayState.extraSectorEnd = delayState.obsAngle;
+
+            badge.textContent = `追いついた！（${getPerDayDelayText()}）`;
+            setDelayBanner('done', '🎉', `追いついた！この余分な回転（${getPerDayAngleText()} ＝ ${getPerDayDelayText()}）のぶんだけ、月の出が毎日おくれるんだね！`);
+            updateDelayUI();
+            drawPizzaChart();
+          }
+        }
+      }
+
+      if (activeTab === 1) {
+        drawDelaySpaceCanvas();
+      }
+      requestAnimationFrame(animateDelayLoop);
+    }
+
+    function drawDelaySpaceCanvas() {
+      const w = delayCanvas.clientWidth;
+      const h = delayCanvas.clientHeight;
+      if (!w || !h) return;
+
+      const ctx = delayCtx;
+      ctx.clearRect(0, 0, w, h);
+      drawStars(ctx, w, h);
+
+      const cx = w / 2;
+      const cy = h * 0.44;
+      const orbitR = Math.min(w, h) * 0.34;
+      const earthR = Math.min(w, h) * 0.105;
+      const moonR = Math.min(w, h) * 0.042;
+
+      // 1. 太陽（下部）
+      drawSunAtBottom(ctx, cx, w, h);
+
+      // 2. 公転軌道＆等分線
+      ctx.beginPath();
+      ctx.arc(cx, cy, orbitR, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const slices = delayState.cycleDays;
+      const sliceCount = Math.ceil(slices);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < sliceCount; i++) {
+        const a = Math.PI / 2 - (i / slices) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(a) * orbitR, cy + Math.sin(a) * orbitR);
+        ctx.stroke();
+      }
+
+      // 3. 余分な回転のハイライト扇形（地球の周囲と月軌道のズレ）
+      if (delayState.extraSectorStart !== null && delayState.extraSectorEnd !== null) {
+        const sA = delayState.extraSectorStart;
+        const eA = delayState.extraSectorEnd;
+        if (Math.abs(sA - eA) > 0.005) {
+          // 地球周囲の鮮やかな扇形（余分な自転）
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.arc(cx, cy, earthR * 1.95, sA, eA, true);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(251, 191, 36, 0.38)';
+          ctx.fill();
+          ctx.strokeStyle = '#fbbf24';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // 扇形の中央に角度＆時間ラベル
+          const midA = (sA + eA) / 2;
+          const labelR = earthR * 2.25;
+          const lx = cx + Math.cos(midA) * labelR;
+          const ly = cy + Math.sin(midA) * labelR;
+          ctx.fillStyle = '#fde047';
+          ctx.font = `800 ${Math.max(11, w * 0.028)}px "M PLUS Rounded 1c", sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${getPerDayDelayText()}`, lx, ly);
+        }
+      }
+
+      // 月の公転ズレ（昨日→今日）の扇形ハイライト
+      if (delayState.ghostMoonAngle !== null && Math.abs(delayState.ghostMoonAngle - delayState.moonAngle) > 0.005) {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, orbitR, delayState.ghostMoonAngle, delayState.moonAngle, true);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.16)';
+        ctx.fill();
+      }
+
+      // 4. 地球と時刻ラベル（経線は obsAngle に連動して回転）
+      drawEarthAndLabels(ctx, cx, cy, earthR, w, delayState.obsAngle);
+
+      // 5. 観測者の位置と「東の空を見る視線」
+      const obsX = cx + Math.cos(delayState.obsAngle) * earthR;
+      const obsY = cy + Math.sin(delayState.obsAngle) * earthR;
+
+      // 東方向は obsAngle - PI/2（反時計回りの接線方向）
+      const eastDir = delayState.obsAngle - Math.PI / 2;
+      const rayLen = orbitR * 1.05;
+      const rayEndX = obsX + Math.cos(eastDir) * rayLen;
+      const rayEndY = obsY + Math.sin(eastDir) * rayLen;
+
+      ctx.save();
+      ctx.setLineDash([6, 5]);
+      ctx.strokeStyle = (delayState.stage === 'pause24h') ? 'rgba(248, 113, 113, 0.95)' : 'rgba(251, 113, 133, 0.85)';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(obsX, obsY);
+      ctx.lineTo(rayEndX, rayEndY);
+      ctx.stroke();
+      ctx.restore();
+
+      // 観測者マーカー（赤いピン）
+      ctx.beginPath();
+      ctx.arc(obsX, obsY, Math.max(6, w * 0.015), 0, Math.PI * 2);
+      ctx.fillStyle = '#f43f5e';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+
+      // 6. 昨日の月の位置（ゴースト表示）
+      if (delayState.ghostMoonAngle !== null) {
+        const gx = cx + Math.cos(delayState.ghostMoonAngle) * orbitR;
+        const gy = cy + Math.sin(delayState.ghostMoonAngle) * orbitR;
+        drawSpaceMoon(ctx, gx, gy, moonR, true);
+        ctx.fillStyle = 'rgba(253, 224, 71, 0.75)';
+        ctx.font = `700 ${Math.max(10, w * 0.023)}px "M PLUS Rounded 1c", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('昨日', gx, gy + moonR + 12);
+      }
+
+      // 7. 現在の月
+      const mx = cx + Math.cos(delayState.moonAngle) * orbitR;
+      const my = cy + Math.sin(delayState.moonAngle) * orbitR;
+      drawSpaceMoon(ctx, mx, my, moonR, false);
+
+      ctx.fillStyle = '#fef08a';
+      ctx.font = `800 ${Math.max(11, w * 0.028)}px "M PLUS Rounded 1c", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('月', mx, my - moonR - 10);
+    }
+
+    // =========================================================================
+    // タブ2：月の満ち欠けシミュレーター（独立画面）
+    // =========================================================================
+    let moonAge = 0.0; // 0.0 〜 29.5
+    const phaseSpaceCanvas = document.getElementById('phaseSpaceCanvas');
+    const phaseSpaceCtx = phaseSpaceCanvas.getContext('2d');
+    const earthViewMoonCanvas = document.getElementById('earthViewMoonCanvas');
+    const earthViewMoonCtx = earthViewMoonCanvas.getContext('2d');
+
+    function onPhaseSliderChange(val) {
+      moonAge = parseFloat(val);
+      updatePhaseUI();
+      drawPhaseSpace();
+      drawEarthViewMoon();
+    }
+
+    function setMoonAge(age) {
+      moonAge = age;
+      document.getElementById('phase-slider').value = age;
+      updatePhaseUI();
+      drawPhaseSpace();
+      drawEarthViewMoon();
+    }
+
+    function getDetailedPhaseData(age) {
+      const p = (age / 29.5) % 1;
+      if (p < 0.04 || p > 0.96) {
+        return {
+          name: '新月（しんげつ）',
+          guide: '太陽と同じ方向にあるため、太陽の光にまぎれて地球からは見えません。朝にのぼって夕方にしずみます。'
+        };
+      }
+      if (p < 0.20) {
+        return {
+          name: '三日月（みかづき）',
+          guide: '右側が細く光る月です。夕方、日がしずんだすぐあとの西の空に低くきれいに見えます！'
+        };
+      }
+      if (p < 0.30) {
+        return {
+          name: '上弦の月（じょうげんのつき）',
+          guide: '右半分が光る半月です。お昼ごろに東から昇り、夕方6時ごろに南の空いちばん高く見えます！'
+        };
+      }
+      if (p < 0.45) {
+        return {
+          name: '十三夜ごろ（満ちていく月）',
+          guide: '右側から大きくふくらんだ月です。夕方から真夜中すぎまで、長い時間よく見えます。'
+        };
+      }
+      if (p < 0.55) {
+        return {
+          name: '満月（まんげつ）',
+          guide: '太陽とちょうど反対側にあるため、まん丸に光ります！夕方6時ごろ東から昇り、真夜中に南の空でかがやき、朝6時ごろ西にしずみます。'
+        };
+      }
+      if (p < 0.70) {
+        return {
+          name: '居待月ごろ（欠けていく月）',
+          guide: '少しずつ右側から欠けはじめた月です。夜おそくに東の空から昇り、明け方の空まで見えます。'
+        };
+      }
+      if (p < 0.80) {
+        return {
+          name: '下弦の月（かげんのつき）',
+          guide: '左半分が光る半月です。真夜中0時ごろに東から昇り、朝6時ごろに南の空に見えます。'
+        };
+      }
+      return {
+        name: '有明の月（逆三日月）',
+        guide: '左側が細く光る月です。夜明け前の東の空に低く光って見えます。もうすぐ新月にもどります！'
+      };
+    }
+
+    function updatePhaseUI() {
+      document.getElementById('slider-age-val').textContent = moonAge.toFixed(1);
+      const info = getDetailedPhaseData(moonAge);
+      document.getElementById('phase-title').textContent = info.name;
+      document.getElementById('phase-age-subtitle').textContent = `月齢 約 ${moonAge.toFixed(1)} 日目`;
+      document.getElementById('phase-guide-text').textContent = info.guide;
+
+      // おおよその時刻計算
+      const p = moonAge / 29.5;
+      const riseMin = 6 * 60 + p * 1440;
+      const southMin = 12 * 60 + p * 1440;
+      const setMin = 18 * 60 + p * 1440;
+
+      document.getElementById('phase-rise-time').textContent = formatClockTime(riseMin);
+      document.getElementById('phase-south-time').textContent = formatClockTime(southMin);
+      document.getElementById('phase-set-time').textContent = formatClockTime(setMin);
+    }
+
+    // タブ2：宇宙図描画
+    function drawPhaseSpace() {
+      const w = phaseSpaceCanvas.clientWidth;
+      const h = phaseSpaceCanvas.clientHeight;
+      if (!w || !h) return;
+
+      const ctx = phaseSpaceCtx;
+      ctx.clearRect(0, 0, w, h);
+      drawStars(ctx, w, h);
+
+      const cx = w / 2;
+      const cy = h * 0.44;
+      const orbitR = Math.min(w, h) * 0.34;
+      const earthR = Math.min(w, h) * 0.105;
+      const moonR = Math.min(w, h) * 0.048;
+
+      // 太陽（下）
+      drawSunAtBottom(ctx, cx, w, h);
+
+      // 公転軌道
+      ctx.beginPath();
+      ctx.arc(cx, cy, orbitR, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 月の位置（反時計回り）
+      const p = moonAge / 29.5;
+      const mAngle = Math.PI / 2 - p * Math.PI * 2;
+      const mx = cx + Math.cos(mAngle) * orbitR;
+      const my = cy + Math.sin(mAngle) * orbitR;
+
+      // 地球から月を見る視線（南中する観測者の方向）
+      ctx.save();
+      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = 'rgba(125, 211, 252, 0.7)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(mx, my);
+      ctx.stroke();
+      ctx.restore();
+
+      // 地球と時刻ラベル
+      drawEarthAndLabels(ctx, cx, cy, earthR, w, 0);
+
+      // 南中する位置（地球上で月を正面に見る点）に小さなマーカー
+      const southX = cx + Math.cos(mAngle) * earthR;
+      const southY = cy + Math.sin(mAngle) * earthR;
+      ctx.beginPath();
+      ctx.arc(southX, southY, 5.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 月（下半分が光る）
+      drawSpaceMoon(ctx, mx, my, moonR, false);
+
+      // 地球から見える側の半円を示す薄いガイド弧
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(mx, my, moonR + 6, mAngle + Math.PI / 2, mAngle + (Math.PI * 3) / 2, false);
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // タブ2：地球から見た月の形（北半球）を大きく正確に描画
+    function drawEarthViewMoon() {
+      const w = earthViewMoonCanvas.clientWidth;
+      const h = earthViewMoonCanvas.clientHeight;
+      if (!w || !h) return;
+
+      const ctx = earthViewMoonCtx;
+      ctx.clearRect(0, 0, w, h);
+
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.min(w, h) * 0.43;
+      const p = (moonAge / 29.5) % 1;
+
+      // ベースの暗い月（影部分）
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = '#1e293b';
+      ctx.fill();
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 光る部分の描画（新月はほぼ暗いまま）
+      if (p > 0.008 && p < 0.992) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.clip();
+
+        const litColor = '#fef08a';
+        const darkColor = '#1e293b';
+
+        if (p <= 0.5) {
+          // 新月→満月：右半分が先に光る
+          ctx.fillStyle = litColor;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, -Math.PI / 2, Math.PI / 2, false);
+          ctx.fill();
+
+          const rx = Math.abs(Math.cos(p * Math.PI * 2)) * r;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, rx, r, 0, 0, Math.PI * 2);
+          ctx.fillStyle = p < 0.25 ? darkColor : litColor;
+          ctx.fill();
+        } else {
+          // 満月→新月：左半分が残り、右から欠ける
+          ctx.fillStyle = litColor;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, Math.PI / 2, -Math.PI / 2, false);
+          ctx.fill();
+
+          const rx = Math.abs(Math.cos(p * Math.PI * 2)) * r;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, rx, r, 0, 0, Math.PI * 2);
+          ctx.fillStyle = p < 0.75 ? litColor : darkColor;
+          ctx.fill();
+        }
+
+        // うっすらとした月の模様（クレーター・海）を重ねて立体感を出す
+        ctx.fillStyle = 'rgba(180, 150, 60, 0.16)';
+        const craters = [
+          { dx: -0.25, dy: -0.2, cr: 0.18 },
+          { dx: 0.22, dy: -0.15, cr: 0.14 },
+          { dx: 0.1, dy: 0.25, cr: 0.2 },
+          { dx: -0.3, dy: 0.22, cr: 0.12 },
+          { dx: 0.35, dy: 0.15, cr: 0.1 }
+        ];
+        craters.forEach(c => {
+          ctx.beginPath();
+          ctx.arc(cx + c.dx * r, cy + c.dy * r, c.cr * r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.restore();
+      }
+    }
+
+    // =========================================================================
+    // タブ3：応用クイズ（全6問・解答と詳しい解説つき）
+    // =========================================================================
+    const QUIZ_DATA = [
+      {
+        category: 'わり算の応用',
+        question: 'もし月が「6日」で地球を1周する星だったら、月が出てくる時間は毎日何時間ずつおくれる？',
+        options: ['2時間', '4時間', '6時間', '8時間'],
+        correctIndex: 1,
+        explanation: '月が1周すると、月の出の時刻もちょうど1周（24時間）おくれます。6日で1周するなら、24時間 ÷ 6日 ＝ 4時間。毎日4時間ずつおくれます！'
+      },
+      {
+        category: 'おくれ時間の計算',
+        question: 'ほんとうの月は毎日およそ50分ずつおくれます。では「3日たつ」と、月が出てくる時間はおよそ何時間何分おくれる？',
+        options: ['約1時間30分', '約2時間', '約2時間30分', '約3時間'],
+        correctIndex: 2,
+        explanation: '1日で約50分おくれるので、3日たつと 50分 × 3日 ＝ 150分 おくれます。1時間は60分なので、150分 ＝ 2時間30分 になります！'
+      },
+      {
+        category: '満月と新月の関係',
+        question: '新月からちょうど半分（約15日）たった「満月」のとき、月の出の時刻は新月のときよりおよそ何時間おくれている？',
+        options: ['約6時間', '約12時間', '約18時間', '約24時間'],
+        correctIndex: 1,
+        explanation: '1周で24時間おくれるので、ちょうど半周（満月）なら半分の「12時間」おくれます。新月が朝6時ごろに出るのに対して、満月は12時間後の夕方6時ごろに東から昇ります！'
+      },
+      {
+        category: '月の満ち欠けと時刻',
+        question: '夕方6時ごろ、ちょうど南の空（いちばん高いところ）に見える月の形はどれ？',
+        options: [
+          '新月（見えない）',
+          '上弦の月（右半分が光っている月）',
+          '満月（まん丸の月）',
+          '下弦の月（左半分が光っている月）'
+        ],
+        correctIndex: 1,
+        explanation: '太陽が下にある宇宙図で考えると、地球の「夕方6時（右がわ）」の位置に立って正面（南の空）に見上げる先にあるのが「上弦の月（右半分が光っている月）」です！'
+      },
+      {
+        category: '観察の応用問題',
+        question: '今日の夜8時に、東の空からちょうど昇ってきた月を見ました。では、明日の「夜8時」に同じ東の空を見ると、月はどうなっている？',
+        options: [
+          '昨日より高いところにある',
+          'ちょうど昨日と同じ場所にある',
+          'まだ昇っていない（地平線の下）',
+          'もう西の空にしずんでいる'
+        ],
+        correctIndex: 2,
+        explanation: '明日の月の出は約50分おくれて「夜8時50分ごろ」になります。そのため、明日の夜8時の時点では、まだ地平線の下にあって昇っていません！'
+      },
+      {
+        category: '思考力チャレンジ',
+        question: 'もし月が今と「逆向き（時計回り）」に地球の周りを回っていたら、月が出てくる時間は毎日どうなる？',
+        options: [
+          '毎日約50分「早く」なる',
+          '毎日約50分「おそく」なる',
+          '毎日まったく同じ時間になる',
+          '月が見えなくなる'
+        ],
+        correctIndex: 0,
+        explanation: '地球は反時計回りに自転しています。もし月が逆向き（時計回り）に回っていたら、地球が1回転し終わる前に月のほうから近づいてくるため、24時間より短い時間で再び月が見えます。つまり毎日約50分「早く」なります！'
+      }
+    ];
+
+    const quizState = {
+      currentIndex: 0,
+      score: 0,
+      answered: false,
+      userAnswers: []
+    };
+
+    function renderQuizQuestion() {
+      const q = QUIZ_DATA[quizState.currentIndex];
+      quizState.answered = false;
+
+      document.getElementById('quiz-progress-label').textContent = `第 ${quizState.currentIndex + 1} 問 / 全 ${QUIZ_DATA.length} 問`;
+      document.getElementById('quiz-score-live').textContent = `いまの正解数：${quizState.score} 問`;
+      document.getElementById('quiz-progress-bar').style.width = `${((quizState.currentIndex + 1) / QUIZ_DATA.length) * 100}%`;
+      document.getElementById('quiz-category-tag').textContent = q.category;
+      document.getElementById('quiz-question-text').textContent = `Q${quizState.currentIndex + 1}. ${q.question}`;
+
+      const optionsWrap = document.getElementById('quiz-options');
+      optionsWrap.innerHTML = '';
+      const labels = ['A', 'B', 'C', 'D'];
+
+      q.options.forEach((optText, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-opt-btn w-full text-left p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 font-bold text-slate-800 text-sm sm:text-base transition flex items-center gap-3 cursor-pointer';
+        btn.innerHTML = `
+          <span class="w-8 h-8 rounded-xl bg-white border border-slate-300 flex items-center justify-center font-extrabold text-indigo-700 shrink-0">${labels[idx]}</span>
+          <span>${optText}</span>
+        `;
+        btn.onclick = () => selectQuizOption(idx);
+        optionsWrap.appendChild(btn);
+      });
+
+      document.getElementById('quiz-feedback').classList.add('hidden');
+    }
+
+    function selectQuizOption(selectedIdx) {
+      if (quizState.answered) return;
+      quizState.answered = true;
+
+      const q = QUIZ_DATA[quizState.currentIndex];
+      const isCorrect = selectedIdx === q.correctIndex;
+      if (isCorrect) quizState.score++;
+
+      quizState.userAnswers.push({
+        questionIndex: quizState.currentIndex,
+        selectedIdx,
+        isCorrect
+      });
+
+      document.getElementById('quiz-score-live').textContent = `いまの正解数：${quizState.score} 問`;
+
+      // 選択肢のスタイル更新
+      const buttons = document.querySelectorAll('.quiz-opt-btn');
+      buttons.forEach((btn, idx) => {
+        btn.disabled = true;
+        btn.classList.remove('cursor-pointer', 'hover:bg-indigo-50', 'hover:border-indigo-300');
+        if (idx === q.correctIndex) {
+          btn.className = 'quiz-opt-btn w-full text-left p-3.5 sm:p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50 font-extrabold text-emerald-950 text-sm sm:text-base flex items-center gap-3';
+        } else if (idx === selectedIdx && !isCorrect) {
+          btn.className = 'quiz-opt-btn w-full text-left p-3.5 sm:p-4 rounded-2xl border-2 border-rose-400 bg-rose-50 font-bold text-rose-900 text-sm sm:text-base flex items-center gap-3';
+        } else {
+          btn.className = 'quiz-opt-btn w-full text-left p-3.5 sm:p-4 rounded-2xl border-2 border-slate-100 bg-slate-50/60 text-slate-400 font-bold text-sm sm:text-base flex items-center gap-3';
+        }
+      });
+
+      // フィードバック解説ボックスを表示
+      const fb = document.getElementById('quiz-feedback');
+      const fbHeader = document.getElementById('quiz-feedback-header');
+      const fbExp = document.getElementById('quiz-feedback-exp');
+      const nextBtn = document.getElementById('quiz-next-btn');
+
+      fb.classList.remove('hidden');
+      if (isCorrect) {
+        fb.className = 'mt-5 rounded-2xl p-4 sm:p-5 border-2 border-emerald-400 bg-emerald-50/80';
+        fbHeader.className = 'text-base sm:text-lg font-extrabold flex items-center gap-2 mb-2 text-emerald-800';
+        fbHeader.textContent = '⭕ せいかい！すばらしい！';
+      } else {
+        fb.className = 'mt-5 rounded-2xl p-4 sm:p-5 border-2 border-rose-300 bg-rose-50/80';
+        fbHeader.className = 'text-base sm:text-lg font-extrabold flex items-center gap-2 mb-2 text-rose-800';
+        fbHeader.textContent = `❌ おしい！正解は「${q.options[q.correctIndex]}」だよ`;
+      }
+
+      fbExp.innerHTML = `<p><strong class="text-slate-900">【解説】</strong>${q.explanation}</p>`;
+      nextBtn.textContent = (quizState.currentIndex === QUIZ_DATA.length - 1) ? '結果を見る 🎉' : '次の問題へ ▶';
+    }
+
+    function nextQuizQuestion() {
+      if (quizState.currentIndex < QUIZ_DATA.length - 1) {
+        quizState.currentIndex++;
+        renderQuizQuestion();
+      } else {
+        showQuizResults();
+      }
+    }
+
+    function showQuizResults() {
+      document.getElementById('quiz-active-view').classList.add('hidden');
+      document.getElementById('quiz-result-view').classList.remove('hidden');
+
+      document.getElementById('result-score').textContent = quizState.score;
+      const emojiEl = document.getElementById('result-emoji');
+      const msgEl = document.getElementById('result-message');
+
+      if (quizState.score === QUIZ_DATA.length) {
+        emojiEl.textContent = '🏆';
+        msgEl.textContent = '全問正解！月の動きと計算をかんぺきにマスターしたね！';
+      } else if (quizState.score >= 4) {
+        emojiEl.textContent = '🎉';
+        msgEl.textContent = 'すごい！とってもよく理解できているよ。まちがえた問題も解説をチェックしよう！';
+      } else {
+        emojiEl.textContent = '🌟';
+        msgEl.textContent = 'よくがんばったね！シミュレーターを動かしながら、もう一度チャレンジしてみよう！';
+      }
+
+      const listEl = document.getElementById('result-review-list');
+      listEl.innerHTML = '';
+
+      QUIZ_DATA.forEach((q, idx) => {
+        const ans = quizState.userAnswers[idx];
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-2xl border-2 ${ans.isCorrect ? 'border-emerald-200 bg-emerald-50/40' : 'border-rose-200 bg-rose-50/40'}`;
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-2 mb-1.5">
+            <div class="font-extrabold text-sm sm:text-base text-slate-900">Q${idx + 1}. ${q.question}</div>
+            <span class="shrink-0 text-xs font-extrabold px-2.5 py-1 rounded-full ${ans.isCorrect ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900'}">
+              ${ans.isCorrect ? '⭕ 正解' : '❌ 不正解'}
+            </span>
+          </div>
+          <div class="text-xs sm:text-sm text-slate-700 space-y-1">
+            <div>あなたの答え：<strong>${q.options[ans.selectedIdx]}</strong> ／ 正解：<strong class="text-emerald-700">${q.options[q.correctIndex]}</strong></div>
+            <div class="text-slate-600 bg-white/80 rounded-xl p-2.5 border border-slate-200/80 mt-1.5">${q.explanation}</div>
+          </div>
+        `;
+        listEl.appendChild(card);
+      });
+    }
+
+    function restartQuiz() {
+      quizState.currentIndex = 0;
+      quizState.score = 0;
+      quizState.answered = false;
+      quizState.userAnswers = [];
+      document.getElementById('quiz-result-view').classList.add('hidden');
+      document.getElementById('quiz-active-view').classList.remove('hidden');
+      renderQuizQuestion();
+    }
+
+    // =========================================================================
+    // レスポンシブ・キャンバスリサイズと初期化
+    // =========================================================================
+    function resizeSingleCanvas(canvas, ctx) {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function resizeAllCanvases() {
+      resizeSingleCanvas(delayCanvas, delayCtx);
+      resizeSingleCanvas(pizzaCanvas, pizzaCtx);
+      resizeSingleCanvas(phaseSpaceCanvas, phaseSpaceCtx);
+      resizeSingleCanvas(earthViewMoonCanvas, earthViewMoonCtx);
+    }
+
+    window.addEventListener('resize', () => {
+      resizeAllCanvases();
+      drawPizzaChart();
+      if (activeTab === 2) {
+        drawPhaseSpace();
+        drawEarthViewMoon();
+      }
+    });
+
+    window.addEventListener('load', () => {
+      setAnimSpeed('normal');
+      updateStepButtons();
+      updateDelayUI();
+      updatePhaseUI();
+      renderQuizQuestion();
+      switchMainTab(1);
+      requestAnimationFrame(animateDelayLoop);
+    });
+  </script>
+</body>
+</html>
