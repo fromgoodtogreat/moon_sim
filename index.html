@@ -70,12 +70,8 @@
           </h1>
         </div>
         <div class="text-xs sm:text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2">
-          <span class="font-bold text-slate-700">共通ルール：</span>北極の上から見た図 ／ 太陽は<span class="font-bold text-orange-600">下</span> ／ 自転も公転も<span class="font-bold text-indigo-600">反時計回り↺</span>
-        </div>
-      </div>
-
-      <!-- トップタブナビゲーション（3つの独立モード） -->
-      <nav class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-4" aria-label="学習モード切替">
+      <!-- トップタブナビゲーション（4つの独立モード） -->
+      <nav class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-4" aria-label="学習モード切替">
         <button id="nav-tab-1" onclick="switchMainTab(1)" class="main-tab flex items-center justify-center gap-2 p-3 rounded-2xl font-extrabold text-sm sm:text-base transition-all border-2 cursor-pointer">
           <span>⏰</span>
           <span>1. 毎日50分おくれる理由</span>
@@ -87,6 +83,10 @@
         <button id="nav-tab-3" onclick="switchMainTab(3)" class="main-tab flex items-center justify-center gap-2 p-3 rounded-2xl font-extrabold text-sm sm:text-base transition-all border-2 cursor-pointer">
           <span>📝</span>
           <span>3. 応用クイズ（全6問）</span>
+        </button>
+        <button id="nav-tab-4" onclick="switchMainTab(4)" class="main-tab flex items-center justify-center gap-2 p-3 rounded-2xl font-extrabold text-sm sm:text-base transition-all border-2 cursor-pointer">
+          <span>🌅</span>
+          <span>4. 1日の月の動き</span>
         </button>
       </nav>
     </header>
@@ -407,6 +407,128 @@
       </div>
     </main>
 
+    <!-- ========================================================= -->
+    <!-- タブ4：1日の月の動きシミュレーター（時間スライド）           -->
+    <!-- ========================================================= -->
+    <main id="panel-tab-4" class="tab-panel hidden">
+      <!-- ステップ1：月の位置（形）を選ぶバー -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-4 sm:p-5 mb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+          <h2 class="text-sm sm:text-base font-extrabold text-slate-800">🌙 ① 観察する月の位置（形）をえらぼう</h2>
+          <span id="daily-moon-summary" class="text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">
+            満月（月齢 約14.8日）
+          </span>
+        </div>
+        <div class="grid grid-cols-3 sm:grid-cols-5 gap-2">
+          <button id="daily-preset-0" onclick="setDailyMoonAge(0)" class="daily-preset-btn p-2.5 rounded-2xl border-2 text-xs sm:text-sm font-extrabold transition cursor-pointer">🌑 新月</button>
+          <button id="daily-preset-3" onclick="setDailyMoonAge(3.0)" class="daily-preset-btn p-2.5 rounded-2xl border-2 text-xs sm:text-sm font-extrabold transition cursor-pointer">🌒 三日月</button>
+          <button id="daily-preset-7.4" onclick="setDailyMoonAge(7.375)" class="daily-preset-btn p-2.5 rounded-2xl border-2 text-xs sm:text-sm font-extrabold transition cursor-pointer">🌓 上弦の月</button>
+          <button id="daily-preset-14.8" onclick="setDailyMoonAge(14.75)" class="daily-preset-btn p-2.5 rounded-2xl border-2 text-xs sm:text-sm font-extrabold transition cursor-pointer">🌕 満月</button>
+          <button id="daily-preset-22.1" onclick="setDailyMoonAge(22.125)" class="daily-preset-btn p-2.5 rounded-2xl border-2 text-xs sm:text-sm font-extrabold transition cursor-pointer">🌗 下弦の月</button>
+        </div>
+      </div>
+
+      <!-- メイン2カラム（左：空の景色＋時間スライダー、右：宇宙から見た図＋時刻ガイド） -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start">
+
+        <!-- 左側：日本から見た東・南・西の空＋時間スライダー -->
+        <div class="lg:col-span-7 bg-white rounded-3xl shadow-sm border border-slate-200 p-4 sm:p-5">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <h2 class="text-sm sm:text-base font-extrabold text-slate-800">🔭 ② 地上（日本）から見た南の空</h2>
+            <span id="daily-visibility-badge" class="text-xs sm:text-sm font-extrabold px-3 py-1 rounded-full bg-amber-100 text-amber-900">
+              🌅 東の空から昇ってきたよ！
+            </span>
+          </div>
+
+          <!-- 空の景色キャンバス -->
+          <div class="relative w-full aspect-[16/10] rounded-2xl overflow-hidden shadow-inner border border-slate-300">
+            <canvas id="dailySkyCanvas" class="w-full h-full block"></canvas>
+          </div>
+
+          <!-- 時間スライダー＆操作パネル -->
+          <div class="mt-4 bg-slate-50 rounded-2xl p-4 border border-slate-200">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <span class="text-xs sm:text-sm font-bold text-slate-700">🕒 時間をスライドして1日の動きを見よう</span>
+              <span id="daily-time-display" class="text-lg sm:text-xl font-extrabold text-indigo-700">夕方 18:00</span>
+            </div>
+            <input id="daily-time-slider" type="range" min="0" max="1440" step="10" value="1080" class="w-full" oninput="onDailyTimeSliderChange(this.value)" />
+            <div class="flex justify-between text-[11px] text-slate-400 font-bold mt-1">
+              <span>0:00 (真夜中)</span>
+              <span>6:00 (朝)</span>
+              <span>12:00 (昼)</span>
+              <span>18:00 (夕方)</span>
+              <span>24:00</span>
+            </div>
+
+            <!-- 再生＆時刻ジャンプボタン -->
+            <div class="mt-3 pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+              <button id="daily-play-btn" onclick="toggleDailyPlay()" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-extrabold text-xs sm:text-sm shadow-sm transition cursor-pointer flex items-center gap-1.5">
+                <span id="daily-play-icon">▶</span>
+                <span id="daily-play-label">1日を自動再生</span>
+              </button>
+              <div class="flex flex-wrap gap-1.5">
+                <button onclick="setDailyTime(360)" class="px-2.5 py-2 rounded-xl bg-white hover:bg-sky-50 border border-slate-300 text-xs font-bold text-slate-700 transition cursor-pointer">朝 6:00</button>
+                <button onclick="setDailyTime(720)" class="px-2.5 py-2 rounded-xl bg-white hover:bg-sky-50 border border-slate-300 text-xs font-bold text-slate-700 transition cursor-pointer">昼 12:00</button>
+                <button onclick="setDailyTime(1080)" class="px-2.5 py-2 rounded-xl bg-white hover:bg-amber-50 border border-slate-300 text-xs font-bold text-slate-700 transition cursor-pointer">夕方 18:00</button>
+                <button onclick="setDailyTime(0)" class="px-2.5 py-2 rounded-xl bg-white hover:bg-indigo-50 border border-slate-300 text-xs font-bold text-slate-700 transition cursor-pointer">真夜中 0:00</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右側：宇宙から見た地球の自転＆地平線＋時刻まとめ -->
+        <div class="lg:col-span-5 flex flex-col gap-4">
+          <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-4 sm:p-5">
+            <div class="flex items-center justify-between mb-2">
+              <h2 class="text-sm sm:text-base font-extrabold text-slate-800">🌌 宇宙から見た地球の自転</h2>
+              <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">明るい側が空に見える範囲</span>
+            </div>
+
+            <div class="space-canvas-wrap relative w-full aspect-square max-w-[400px] mx-auto rounded-2xl overflow-hidden shadow-inner border border-slate-800">
+              <canvas id="dailySpaceCanvas" class="w-full h-full block"></canvas>
+            </div>
+
+            <div class="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-600">
+              <span class="flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-rose-500 inline-block" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <circle cx="12" cy="5" r="3.5" />
+                  <path d="M12 10c-3 0-5 1.8-5 4v2h2.2v6h5.6v-6H17v-2c0-2.2-2-4-5-4z" />
+                </svg>
+                今の時刻の観測者
+              </span>
+              <span class="flex items-center gap-1.5"><span class="w-4 border-t-2 border-dashed border-emerald-400 inline-block"></span> 地平線（東〜西）</span>
+            </div>
+          </div>
+
+          <!-- この月の見える時刻まとめ -->
+          <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-4 sm:p-5">
+            <h3 class="text-sm sm:text-base font-extrabold text-slate-800 mb-3">📋 この月の1日のスケジュール</h3>
+            <div class="grid grid-cols-3 gap-2 text-center mb-3">
+              <button onclick="jumpToDailyEvent('rise')" class="bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-2xl p-2.5 transition cursor-pointer">
+                <div class="text-[11px] font-bold text-amber-700">月の出（東）</div>
+                <div id="daily-rise-time" class="text-sm sm:text-base font-extrabold text-amber-950 mt-1">夕方 18:00</div>
+                <div class="text-[10px] text-amber-600 font-bold mt-0.5">タップで移動</div>
+              </button>
+              <button onclick="jumpToDailyEvent('south')" class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-2xl p-2.5 transition cursor-pointer">
+                <div class="text-[11px] font-bold text-indigo-700">南中（南）</div>
+                <div id="daily-south-time" class="text-sm sm:text-base font-extrabold text-indigo-950 mt-1">真夜中 0:00</div>
+                <div class="text-[10px] text-indigo-600 font-bold mt-0.5">タップで移動</div>
+              </button>
+              <button onclick="jumpToDailyEvent('set')" class="bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-2xl p-2.5 transition cursor-pointer">
+                <div class="text-[11px] font-bold text-slate-600">月の入り（西）</div>
+                <div id="daily-set-time" class="text-sm sm:text-base font-extrabold text-slate-900 mt-1">朝 6:00</div>
+                <div class="text-[10px] text-slate-500 font-bold mt-0.5">タップで移動</div>
+              </button>
+            </div>
+            <div id="daily-tip-box" class="bg-sky-50 border border-sky-200 rounded-2xl p-3 text-xs sm:text-sm text-sky-950 leading-relaxed">
+              満月は太陽と反対側にあるため、夕方6時ごろに東の空から昇り、真夜中0時ごろに南の空でいちばん高くなり、朝6時ごろに西の空へしずみます！
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
   </div>
 
   <script>
@@ -562,7 +684,11 @@
     // メインタブ切替
     function switchMainTab(tabNum) {
       activeTab = tabNum;
-      [1, 2, 3].forEach(n => {
+      // タブ4から離れるときは自動再生を止める
+      if (tabNum !== 4 && dailyState.playing) {
+        stopDailyPlay();
+      }
+      [1, 2, 3, 4].forEach(n => {
         const panel = document.getElementById(`panel-tab-${n}`);
         const btn = document.getElementById(`nav-tab-${n}`);
         if (n === tabNum) {
@@ -581,6 +707,9 @@
         if (tabNum === 2) {
           drawPhaseSpace();
           drawEarthViewMoon();
+        } else if (tabNum === 4) {
+          drawDailySpaceCanvas();
+          drawDailySkyCanvas();
         }
       });
     }
@@ -1574,6 +1703,470 @@
     }
 
     // =========================================================================
+    // タブ4：1日の月の動きシミュレーター（時間スライド）
+    // =========================================================================
+    const dailyState = {
+      moonAge: 14.75,      // デフォルトは満月（夕方6時に昇る様子がすぐ分かる）
+      timeMinutes: 1080,   // デフォルトは夕方 18:00（1080分）
+      playing: false,
+      lastFrameTime: 0
+    };
+
+    const dailySkyCanvas = document.getElementById('dailySkyCanvas');
+    const dailySkyCtx = dailySkyCanvas.getContext('2d');
+    const dailySpaceCanvas = document.getElementById('dailySpaceCanvas');
+    const dailySpaceCtx = dailySpaceCanvas.getContext('2d');
+
+    // 角度を [-PI, PI] に正規化するヘルパー
+    function normalizeAngleRad(angle) {
+      let a = ((angle + Math.PI) % (Math.PI * 2) + (Math.PI * 2)) % (Math.PI * 2) - Math.PI;
+      return a;
+    }
+
+    // 任意のキャンバス上に北半球から見た月の満ち欠けを描画するヘルパー
+    function drawMoonPhaseDisc(ctx, cx, cy, r, age) {
+      const p = ((age / 29.5) % 1 + 1) % 1;
+
+      // 暗い部分（夜空になじむ濃い影）
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = '#1e293b';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(226, 232, 240, 0.55)';
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+
+      if (p > 0.008 && p < 0.992) {
+        ctx.clip();
+        const litColor = '#fef08a';
+        const darkColor = '#1e293b';
+
+        if (p <= 0.5) {
+          ctx.fillStyle = litColor;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, -Math.PI / 2, Math.PI / 2, false);
+          ctx.fill();
+
+          const rx = Math.abs(Math.cos(p * Math.PI * 2)) * r;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, rx, r, 0, 0, Math.PI * 2);
+          ctx.fillStyle = p < 0.25 ? darkColor : litColor;
+          ctx.fill();
+        } else {
+          ctx.fillStyle = litColor;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, Math.PI / 2, -Math.PI / 2, false);
+          ctx.fill();
+
+          const rx = Math.abs(Math.cos(p * Math.PI * 2)) * r;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, rx, r, 0, 0, Math.PI * 2);
+          ctx.fillStyle = p < 0.75 ? litColor : darkColor;
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
+    function setDailyMoonAge(age) {
+      dailyState.moonAge = age;
+      // その月の「月の出」の時刻に自動で合わせると変化が分かりやすい
+      const p = age / 29.5;
+      const riseMin = Math.round(((6 * 60 + p * 1440) % 1440) / 10) * 10;
+      dailyState.timeMinutes = riseMin;
+      document.getElementById('daily-time-slider').value = dailyState.timeMinutes;
+
+      updateDailyPresetButtons();
+      updateDailyUI();
+      drawDailySpaceCanvas();
+      drawDailySkyCanvas();
+    }
+
+    function updateDailyPresetButtons() {
+      const presets = [
+        { id: 'daily-preset-0', age: 0 },
+        { id: 'daily-preset-3', age: 3.0 },
+        { id: 'daily-preset-7.4', age: 7.375 },
+        { id: 'daily-preset-14.8', age: 14.75 },
+        { id: 'daily-preset-22.1', age: 22.125 }
+      ];
+      presets.forEach(item => {
+        const btn = document.getElementById(item.id);
+        if (!btn) return;
+        const isSelected = Math.abs(dailyState.moonAge - item.age) < 0.2;
+        if (isSelected) {
+          btn.className = 'daily-preset-btn p-2.5 rounded-2xl border-2 text-xs sm:text-sm font-extrabold transition cursor-pointer bg-amber-50 border-amber-500 text-amber-950 shadow-sm';
+        } else {
+          btn.className = 'daily-preset-btn p-2.5 rounded-2xl border-2 text-xs sm:text-sm font-extrabold transition cursor-pointer bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
+        }
+      });
+    }
+
+    function onDailyTimeSliderChange(val) {
+      if (dailyState.playing) stopDailyPlay();
+      dailyState.timeMinutes = parseFloat(val);
+      updateDailyUI();
+      drawDailySpaceCanvas();
+      drawDailySkyCanvas();
+    }
+
+    function setDailyTime(minutes) {
+      if (dailyState.playing) stopDailyPlay();
+      dailyState.timeMinutes = minutes;
+      document.getElementById('daily-time-slider').value = minutes;
+      updateDailyUI();
+      drawDailySpaceCanvas();
+      drawDailySkyCanvas();
+    }
+
+    function jumpToDailyEvent(eventType) {
+      const p = dailyState.moonAge / 29.5;
+      let target = 0;
+      if (eventType === 'rise') target = (6 * 60 + p * 1440) % 1440;
+      else if (eventType === 'south') target = (12 * 60 + p * 1440) % 1440;
+      else if (eventType === 'set') target = (18 * 60 + p * 1440) % 1440;
+      setDailyTime(Math.round(target / 10) * 10);
+    }
+
+    function toggleDailyPlay() {
+      if (dailyState.playing) {
+        stopDailyPlay();
+      } else {
+        dailyState.playing = true;
+        dailyState.lastFrameTime = performance.now();
+        document.getElementById('daily-play-icon').textContent = '⏸';
+        document.getElementById('daily-play-label').textContent = '一時停止';
+        requestAnimationFrame(animateDailyLoop);
+      }
+    }
+
+    function stopDailyPlay() {
+      dailyState.playing = false;
+      document.getElementById('daily-play-icon').textContent = '▶';
+      document.getElementById('daily-play-label').textContent = '1日を自動再生';
+    }
+
+    function animateDailyLoop(now) {
+      if (!dailyState.playing) return;
+      const dt = Math.min((now - dailyState.lastFrameTime) / 1000, 0.1);
+      dailyState.lastFrameTime = now;
+
+      // 約12秒で1日（1440分）を1周するゆったりした速度
+      dailyState.timeMinutes = (dailyState.timeMinutes + dt * 120) % 1440;
+      document.getElementById('daily-time-slider').value = Math.round(dailyState.timeMinutes);
+
+      updateDailyUI();
+      drawDailySpaceCanvas();
+      drawDailySkyCanvas();
+      requestAnimationFrame(animateDailyLoop);
+    }
+
+    // 観測者の現在角度と月の角度、および相対時角（-PI/2=東, 0=南, +PI/2=西）を算出
+    function getDailyGeometry() {
+      const obsAngle = -Math.PI / 2 - (dailyState.timeMinutes / 1440) * Math.PI * 2;
+      const moonAngle = Math.PI / 2 - (dailyState.moonAge / 29.5) * Math.PI * 2;
+      const sunAngle = Math.PI / 2; // 太陽は常に下
+      const moonDelta = normalizeAngleRad(moonAngle - obsAngle);
+      const sunDelta = normalizeAngleRad(sunAngle - obsAngle);
+      return { obsAngle, moonAngle, sunAngle, moonDelta, sunDelta };
+    }
+
+    function updateDailyUI() {
+      const info = getDetailedPhaseData(dailyState.moonAge);
+      document.getElementById('daily-moon-summary').textContent = `${info.name}（月齢 約${dailyState.moonAge.toFixed(1)}日）`;
+      document.getElementById('daily-time-display').textContent = formatClockTime(dailyState.timeMinutes);
+
+      // この月のスケジュール
+      const p = dailyState.moonAge / 29.5;
+      const riseMin = 6 * 60 + p * 1440;
+      const southMin = 12 * 60 + p * 1440;
+      const setMin = 18 * 60 + p * 1440;
+      document.getElementById('daily-rise-time').textContent = formatClockTime(riseMin);
+      document.getElementById('daily-south-time').textContent = formatClockTime(southMin);
+      document.getElementById('daily-set-time').textContent = formatClockTime(setMin);
+      document.getElementById('daily-tip-box').textContent = info.guide;
+
+      // 現在の見え方ステータスバッジ
+      const { moonDelta } = getDailyGeometry();
+      const badge = document.getElementById('daily-visibility-badge');
+      const deg = (moonDelta * 180) / Math.PI;
+
+      if (dailyState.moonAge < 0.3 || dailyState.moonAge > 29.2) {
+        if (Math.abs(deg) <= 90) {
+          badge.className = 'text-xs sm:text-sm font-extrabold px-3 py-1 rounded-full bg-slate-200 text-slate-700';
+          badge.textContent = '☀ 空にあるけれど、太陽の光で見えないよ（新月）';
+        } else {
+          badge.className = 'text-xs sm:text-sm font-extrabold px-3 py-1 rounded-full bg-slate-200 text-slate-700';
+          badge.textContent = '🌍 地球のかげ（地平線の下）にあるよ';
+        }
+      } else if (deg >= -100 && deg < -75) {
+        badge.className = 'text-xs sm:text-sm font-extrabold px-3 py-1 rounded-full bg-amber-100 text-amber-900';
+        badge.textContent = '🌅 東の空から昇ってきた！（月の出）';
+      } else if (deg >= -75 && deg < -15) {
+        badge.className = 'text-xs sm:text-sm font-extrabold px-3 py-1 rounded-full bg-sky-100 text-sky-900';
+        badge.textContent = '↗ 東〜南東の空をのぼっているよ';
+      } else if (deg >= -15 && deg <= 15) {
+        badge.className = 'text-xs sm:text-sm font-extrabold px-3 py-1 rounded-full bg-indigo-100 text-indigo-900';
+        badge.textContent = '⭐ 南の空でいちばん高い！（南中）';
+      } else if (deg > 15 && deg <= 75) {
+        badge.className = 'text-xs sm:text-sm font-extrabold px-3 py-1 rounded-full bg-sky-100 text-sky-900';
+        badge.textContent = '↘ 南西〜西の空へおりていくよ';
+      } else if (deg > 75 && deg <= 100) {
+        badge.className = 'text-xs sm:text-sm font-extrabold px-3 py-1 rounded-full bg-orange-100 text-orange-900';
+        badge.textContent = '🌇 西の空にしずむところ！（月の入り）';
+      } else {
+        badge.className = 'text-xs sm:text-sm font-extrabold px-3 py-1 rounded-full bg-slate-200 text-slate-700';
+        badge.textContent = '🌍 地平線の下にあって見えないよ';
+      }
+    }
+
+    // タブ4：宇宙から見た地球の自転と地平線を描画
+    function drawDailySpaceCanvas() {
+      const w = dailySpaceCanvas.clientWidth;
+      const h = dailySpaceCanvas.clientHeight;
+      if (!w || !h) return;
+
+      const ctx = dailySpaceCtx;
+      ctx.clearRect(0, 0, w, h);
+      drawStars(ctx, w, h);
+
+      const cx = w / 2;
+      const cy = h * 0.44;
+      const orbitR = Math.min(w, h) * 0.34;
+      const earthR = Math.min(w, h) * 0.105;
+      const moonR = Math.min(w, h) * 0.048;
+
+      const { obsAngle, moonAngle } = getDailyGeometry();
+
+      // 1. 太陽（下部）
+      drawSunAtBottom(ctx, cx, w, h);
+
+      // 2. 観測者から「見える空の範囲（地平線より上）」をうっすらハイライト
+      const obsX = cx + Math.cos(obsAngle) * earthR;
+      const obsY = cy + Math.sin(obsAngle) * earthR;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(obsX, obsY, orbitR * 1.45, obsAngle - Math.PI / 2, obsAngle + Math.PI / 2, false);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(52, 211, 153, 0.12)';
+      ctx.fill();
+      ctx.restore();
+
+      // 3. 公転軌道
+      ctx.beginPath();
+      ctx.arc(cx, cy, orbitR, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 4. 地球と時刻ラベル（経線を現在時刻に合わせて回転）
+      drawEarthAndLabels(ctx, cx, cy, earthR, w, obsAngle);
+
+      // 5. 地平線（観測者の接線：東 ← 人 → 西）
+      const eastAngle = obsAngle - Math.PI / 2;
+      const westAngle = obsAngle + Math.PI / 2;
+      const lineLen = orbitR * 1.05;
+      const ex = obsX + Math.cos(eastAngle) * lineLen;
+      const ey = obsY + Math.sin(eastAngle) * lineLen;
+      const wx = obsX + Math.cos(westAngle) * lineLen;
+      const wy = obsY + Math.sin(westAngle) * lineLen;
+
+      ctx.save();
+      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = 'rgba(52, 211, 153, 0.85)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(wx, wy);
+      ctx.stroke();
+      ctx.restore();
+
+      // 東・西の小さなラベル
+      ctx.fillStyle = '#6ee7b7';
+      ctx.font = `800 ${Math.max(10, w * 0.028)}px "M PLUS Rounded 1c", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('東', obsX + Math.cos(eastAngle) * (earthR * 2.15), obsY + Math.sin(eastAngle) * (earthR * 2.15));
+      ctx.fillText('西', obsX + Math.cos(westAngle) * (earthR * 2.15), obsY + Math.sin(westAngle) * (earthR * 2.15));
+
+      // 6. 観測者（小さな人の形）
+      const personScale = Math.max(13, w * 0.038);
+      drawObserverPerson(ctx, obsX, obsY, obsAngle, personScale, '#f43f5e');
+
+      // 7. 月
+      const mx = cx + Math.cos(moonAngle) * orbitR;
+      const my = cy + Math.sin(moonAngle) * orbitR;
+      drawSpaceMoon(ctx, mx, my, moonR, false);
+
+      ctx.fillStyle = '#fef08a';
+      ctx.font = `800 ${Math.max(11, w * 0.03)}px "M PLUS Rounded 1c", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('月', mx, my - moonR - 10);
+    }
+
+    // 時刻（分）に応じた空のグラデーション色を計算するヘルパー
+    function getSkyGradientColors(minutes) {
+      const h = (minutes % 1440) / 60;
+      if (h >= 8 && h < 16) {
+        return { top: '#0284c7', bottom: '#bae6fd', starAlpha: 0 }; // 昼の青空
+      } else if (h >= 5 && h < 8) {
+        const t = (h - 5) / 3; // 明け方
+        return {
+          top: t < 0.5 ? '#1e293b' : '#0369a1',
+          bottom: t < 0.5 ? '#fb923c' : '#fde68a',
+          starAlpha: Math.max(0, 1 - t * 1.5)
+        };
+      } else if (h >= 16 && h < 19.5) {
+        const t = (h - 16) / 3.5; // 夕方
+        return {
+          top: t < 0.5 ? '#0369a1' : '#1e1b4b',
+          bottom: t < 0.5 ? '#fb923c' : '#f97316',
+          starAlpha: Math.max(0, (t - 0.5) * 1.6)
+        };
+      } else {
+        return { top: '#020617', bottom: '#1e1b4b', starAlpha: 0.9 }; // 夜空
+      }
+    }
+
+    // タブ4：地上（日本）から見上げた東・南・西の空を描画
+    function drawDailySkyCanvas() {
+      const w = dailySkyCanvas.clientWidth;
+      const h = dailySkyCanvas.clientHeight;
+      if (!w || !h) return;
+
+      const ctx = dailySkyCtx;
+      ctx.clearRect(0, 0, w, h);
+
+      const horizonY = h * 0.78;
+      const skyColors = getSkyGradientColors(dailyState.timeMinutes);
+
+      // 1. 空のグラデーション背景
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
+      skyGrad.addColorStop(0, skyColors.top);
+      skyGrad.addColorStop(1, skyColors.bottom);
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, w, horizonY);
+
+      // 2. 夜空の星
+      if (skyColors.starAlpha > 0.05) {
+        ctx.save();
+        STARS.forEach(s => {
+          const sy = s.y * horizonY * 0.92;
+          ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha * skyColors.starAlpha})`;
+          ctx.beginPath();
+          ctx.arc(s.x * w, sy, s.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.restore();
+      }
+
+      // 3. 天体の通り道（東→南→西の半円アーチ）
+      const cx = w / 2;
+      const arcRx = w * 0.39;
+      const arcRy = horizonY * 0.76;
+
+      ctx.save();
+      ctx.setLineDash([6, 6]);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(cx, horizonY, arcRx, arcRy, 0, Math.PI, 0, false);
+      ctx.stroke();
+      ctx.restore();
+
+      const { moonDelta, sunDelta } = getDailyGeometry();
+
+      // 4. 太陽（空に出ているとき描画）
+      if (Math.abs(sunDelta) <= Math.PI * 0.56) {
+        const sunX = cx + Math.sin(sunDelta) * arcRx;
+        const sunY = horizonY - Math.cos(sunDelta) * arcRy;
+        const sunR = Math.max(12, Math.min(w, h) * 0.055);
+
+        const sGrad = ctx.createRadialGradient(sunX, sunY, sunR * 0.2, sunX, sunY, sunR * 2.1);
+        sGrad.addColorStop(0, '#fef9c3');
+        sGrad.addColorStop(0.45, 'rgba(251, 146, 60, 0.85)');
+        sGrad.addColorStop(1, 'rgba(251, 146, 60, 0)');
+        ctx.fillStyle = sGrad;
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, sunR * 2.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#fde047';
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `800 ${Math.max(10, w * 0.024)}px "M PLUS Rounded 1c", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('太陽', sunX, sunY - sunR - 6);
+      }
+
+      // 5. 月（地平線より上にあるとき描画）
+      const moonR = Math.max(15, Math.min(w, h) * 0.07);
+      if (Math.abs(moonDelta) <= Math.PI * 0.56) {
+        const moonX = cx + Math.sin(moonDelta) * arcRx;
+        const moonY = horizonY - Math.cos(moonDelta) * arcRy;
+
+        // ほんのりとした月の光輪
+        if (dailyState.moonAge > 0.5 && dailyState.moonAge < 29.0) {
+          const mGrad = ctx.createRadialGradient(moonX, moonY, moonR * 0.6, moonX, moonY, moonR * 1.9);
+          mGrad.addColorStop(0, 'rgba(254, 240, 138, 0.45)');
+          mGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+          ctx.fillStyle = mGrad;
+          ctx.beginPath();
+          ctx.arc(moonX, moonY, moonR * 1.9, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        drawMoonPhaseDisc(ctx, moonX, moonY, moonR, dailyState.moonAge);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `800 ${Math.max(11, w * 0.026)}px "M PLUS Rounded 1c", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('月', moonX, moonY - moonR - 8);
+      }
+
+      // 6. 地面（地平線の下をカバーして沈む演出を自然にする）
+      const groundGrad = ctx.createLinearGradient(0, horizonY, 0, h);
+      groundGrad.addColorStop(0, '#1e293b');
+      groundGrad.addColorStop(1, '#0f172a');
+      ctx.fillStyle = groundGrad;
+      ctx.fillRect(0, horizonY, w, h - horizonY);
+
+      // 地平線ライン
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, horizonY);
+      ctx.lineTo(w, horizonY);
+      ctx.stroke();
+
+      // 月が地平線の下にあるときの案内メッセージ
+      if (Math.abs(moonDelta) > Math.PI * 0.56) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.font = `700 ${Math.max(12, w * 0.028)}px "M PLUS Rounded 1c", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🌍 いま月は地平線の下にあって見えません', cx, horizonY * 0.48);
+      }
+
+      // 7. 方位ラベル（東・南・西）
+      const labelY = horizonY + (h - horizonY) * 0.52;
+      ctx.font = `800 ${Math.max(13, w * 0.032)}px "M PLUS Rounded 1c", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      ctx.fillStyle = '#fcd34d';
+      ctx.fillText('東（のぼる）', cx - arcRx, labelY);
+      ctx.fillStyle = '#e0e7ff';
+      ctx.fillText('南（南中）', cx, labelY);
+      ctx.fillStyle = '#fdba74';
+      ctx.fillText('西（しずむ）', cx + arcRx, labelY);
+    }
+
+    // =========================================================================
     // レスポンシブ・キャンバスリサイズと初期化
     // =========================================================================
     function resizeSingleCanvas(canvas, ctx) {
@@ -1590,6 +2183,8 @@
       resizeSingleCanvas(pizzaCanvas, pizzaCtx);
       resizeSingleCanvas(phaseSpaceCanvas, phaseSpaceCtx);
       resizeSingleCanvas(earthViewMoonCanvas, earthViewMoonCtx);
+      resizeSingleCanvas(dailySkyCanvas, dailySkyCtx);
+      resizeSingleCanvas(dailySpaceCanvas, dailySpaceCtx);
     }
 
     window.addEventListener('resize', () => {
@@ -1598,6 +2193,9 @@
       if (activeTab === 2) {
         drawPhaseSpace();
         drawEarthViewMoon();
+      } else if (activeTab === 4) {
+        drawDailySpaceCanvas();
+        drawDailySkyCanvas();
       }
     });
 
@@ -1606,6 +2204,8 @@
       updateStepButtons();
       updateDelayUI();
       updatePhaseUI();
+      updateDailyPresetButtons();
+      updateDailyUI();
       renderQuizQuestion();
       switchMainTab(1);
       requestAnimationFrame(animateDelayLoop);
